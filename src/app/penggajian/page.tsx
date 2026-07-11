@@ -67,6 +67,9 @@ export default function PenggajianPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
 
   // Slip modal state
   const [isSlipOpen, setIsSlipOpen] = useState(false);
@@ -260,6 +263,32 @@ export default function PenggajianPage() {
     p.karyawan.jabatan.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredPayrolls.length / rowsPerPage);
+  const paginatedPayrolls = filteredPayrolls.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const handleSearch = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const paginBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    padding: '0.35rem 0.65rem',
+    borderRadius: '8px',
+    border: '1px solid var(--border-light)',
+    background: 'rgba(255,255,255,0.04)',
+    color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
+    fontSize: '0.82rem',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.4 : 1,
+    transition: 'all 0.15s',
+    minWidth: '32px',
+    textAlign: 'center' as const,
+  });
+
+
   const totalExpense = rekapGaji.reduce((acc, curr) => acc + curr.gajiBersih, 0);
   const paidCount = rekapGaji.filter((p) => p.statusPembayaran === 'LUNAS').length;
   const pendingCount = rekapGaji.filter((p) => p.statusPembayaran === 'TERTUNDA').length;
@@ -350,10 +379,26 @@ export default function PenggajianPage() {
               className="form-input"
               style={{ paddingLeft: '40px' }}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <span>Tampilkan:</span>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+          style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)',
+            borderRadius: '8px', color: 'var(--text-primary)', padding: '0.4rem 0.6rem',
+            fontSize: '0.85rem', cursor: 'pointer',
+          }}
+        >
+          {[10, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+        <span>baris</span>
+      </div>
+
         <button onClick={handleExportCSV} className="btn btn-secondary" style={{ alignSelf: 'flex-end', display: 'inline-flex', gap: '0.25rem' }} title="Ekspor Rekap CSV">
           <span>Ekspor CSV</span>
         </button>
@@ -419,7 +464,7 @@ export default function PenggajianPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPayrolls.map((payroll) => (
+                {paginatedPayrolls.map((payroll) => (
                   <tr key={payroll.id}>
                     <td>
                       <div style={{ fontWeight: 600 }}>{payroll.karyawan.nama}</div>
@@ -456,7 +501,72 @@ export default function PenggajianPage() {
             </table>
           </div>
         )}
+
+        {/* Pagination Footer */}
+        {!loading && filteredPayrolls.length > 0 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '1.25rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-light)',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}>
+            {/* Info */}
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              Menampilkan <strong>{(currentPage - 1) * rowsPerPage + 1}</strong>–<strong>{Math.min(currentPage * rowsPerPage, filteredPayrolls.length)}</strong> dari <strong>{filteredPayrolls.length}</strong> karyawan
+            </span>
+
+            {/* Page controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                style={paginBtnStyle(currentPage === 1)}
+              >«</button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={paginBtnStyle(currentPage === 1)}
+              >‹</button>
+
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                const page = start + i;
+                if (page > totalPages) return null;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    style={{
+                      ...paginBtnStyle(false),
+                      background: page === currentPage ? 'var(--primary)' : 'rgba(255,255,255,0.04)',
+                      color: page === currentPage ? '#fff' : 'var(--text-secondary)',
+                      fontWeight: page === currentPage ? 700 : 400,
+                      borderColor: page === currentPage ? 'var(--primary)' : 'var(--border-light)',
+                    }}
+                  >{page}</button>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={paginBtnStyle(currentPage === totalPages)}
+              >›</button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                style={paginBtnStyle(currentPage === totalPages)}
+              >»</button>
+            </div>
+          </div>
+        )}
       </div>
+
 
       {/* Slip Gaji Digital Modal */}
       {isSlipOpen && (

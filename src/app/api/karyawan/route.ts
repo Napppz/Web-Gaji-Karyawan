@@ -65,3 +65,19 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE() {
+  try {
+    await prisma.penggajian.deleteMany({});
+    await prisma.kehadiran.deleteMany({});
+    const deleted = await prisma.karyawan.deleteMany({});
+    return NextResponse.json({ message: `Berhasil menghapus seluruh ${deleted.count} karyawan.` });
+  } catch (error: any) {
+    console.error('Gagal menghapus semua karyawan:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+

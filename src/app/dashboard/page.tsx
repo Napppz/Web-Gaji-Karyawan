@@ -53,6 +53,8 @@ export default function Dashboard() {
   const [lastRefresh, setLastRefresh] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [searchAttend, setSearchAttend] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -124,6 +126,33 @@ export default function Dashboard() {
     row.nama.toLowerCase().includes(searchAttend.toLowerCase()) ||
     row.jabatan.toLowerCase().includes(searchAttend.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredAttend.length / rowsPerPage);
+  const paginatedAttend = filteredAttend.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  // Reset ke halaman 1 saat search berubah
+  const handleSearch = (val: string) => {
+    setSearchAttend(val);
+    setCurrentPage(1);
+  };
+
+  // Style helper untuk tombol paginasi
+  const paginBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    padding: '0.35rem 0.65rem',
+    borderRadius: '8px',
+    border: '1px solid var(--border-light)',
+    background: 'rgba(255,255,255,0.04)',
+    color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
+    fontSize: '0.82rem',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.4 : 1,
+    transition: 'all 0.15s',
+    minWidth: '32px',
+    textAlign: 'center' as const,
+  });
 
   return (
     <>
@@ -254,16 +283,31 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Search */}
-        <div style={{ marginBottom: '1rem', position: 'relative' }}>
+        {/* Search + Rows per page */}
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <input
             type="text"
             placeholder="Cari nama atau jabatan karyawan..."
             className="form-input"
-            style={{ paddingLeft: '1rem', fontSize: '0.85rem' }}
+            style={{ paddingLeft: '1rem', fontSize: '0.85rem', flex: 1, minWidth: '200px' }}
             value={searchAttend}
-            onChange={e => setSearchAttend(e.target.value)}
+            onChange={e => handleSearch(e.target.value)}
           />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.83rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
+            <span>Tampilkan</span>
+            <select
+              value={rowsPerPage}
+              onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+              style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)',
+                borderRadius: '8px', color: 'var(--text-primary)', padding: '0.4rem 0.6rem',
+                fontSize: '0.83rem', cursor: 'pointer',
+              }}
+            >
+              {[10, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <span>baris</span>
+          </div>
         </div>
 
         {/* Table */}
@@ -271,6 +315,7 @@ export default function Dashboard() {
           <table className="table">
             <thead>
               <tr>
+                <th style={{ width: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>#</th>
                 <th>Karyawan</th>
                 <th>Jabatan</th>
                 <th>Status</th>
@@ -282,11 +327,13 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {filteredAttend.length > 0 ? filteredAttend.map((row) => {
+              {paginatedAttend.length > 0 ? paginatedAttend.map((row, idx) => {
                 const total = row.hariHadir + row.hariSakit + row.hariCuti + row.hariAlpha;
                 const pct = total > 0 ? Math.round((row.hariHadir / total) * 100) : 0;
+                const rowNum = (currentPage - 1) * rowsPerPage + idx + 1;
                 return (
                   <tr key={row.id}>
+                    <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>{rowNum}</td>
                     <td style={{ fontWeight: 600 }}>{row.nama}</td>
                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{row.jabatan}</td>
                     <td>
@@ -320,7 +367,7 @@ export default function Dashboard() {
                 );
               }) : (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     {searchAttend ? 'Tidak ada karyawan yang sesuai pencarian.' : 'Belum ada data kehadiran bulan ini.'}
                   </td>
                 </tr>
@@ -329,7 +376,65 @@ export default function Dashboard() {
           </table>
         </div>
 
-        <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+        {/* Pagination Footer */}
+        {filteredAttend.length > 0 && (
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginTop: '1.25rem', flexWrap: 'wrap', gap: '0.75rem',
+          }}>
+            {/* Info */}
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              Menampilkan <strong>{(currentPage - 1) * rowsPerPage + 1}</strong>–<strong>{Math.min(currentPage * rowsPerPage, filteredAttend.length)}</strong> dari <strong>{filteredAttend.length}</strong> karyawan
+            </span>
+
+            {/* Page controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                style={paginBtnStyle(currentPage === 1)}
+              >«</button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={paginBtnStyle(currentPage === 1)}
+              >‹</button>
+
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                const page = start + i;
+                if (page > totalPages) return null;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    style={{
+                      ...paginBtnStyle(false),
+                      background: page === currentPage ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                      color: page === currentPage ? '#fff' : 'var(--text-secondary)',
+                      fontWeight: page === currentPage ? 700 : 400,
+                      borderColor: page === currentPage ? 'var(--primary)' : 'var(--border-light)',
+                    }}
+                  >{page}</button>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={paginBtnStyle(currentPage === totalPages)}
+              >›</button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                style={paginBtnStyle(currentPage === totalPages)}
+              >»</button>
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: '0.75rem', textAlign: 'right' }}>
           <Link href="/kehadiran" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
             fontSize: '0.83rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: 600,

@@ -2,7 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, RefreshCw, Briefcase, DollarSign, Users, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, RefreshCw, Briefcase, DollarSign, Users, CheckCircle2, Upload } from 'lucide-react';
+
 
 interface Karyawan {
   id: string;
@@ -25,6 +26,17 @@ export default function KaryawanPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingKaryawan, setEditingKaryawan] = useState<Karyawan | null>(null);
   const [toastMessage, setToastMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // CSV Upload States
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [clearExisting, setClearExisting] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
+
+
   
   // Form State
   const [formData, setFormData] = useState({
@@ -198,6 +210,28 @@ export default function KaryawanPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm('PERHATIAN! Apakah Anda yakin ingin menghapus SEMUA data karyawan? Seluruh data absensi dan slip gaji terkait di database akan dikosongkan permanen.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/karyawan', { method: 'DELETE' });
+      const result = await res.json();
+      if (res.ok) {
+        fetchKaryawan();
+        setToastMessage(result.message || 'Semua data karyawan berhasil dihapus!');
+        setTimeout(() => setToastMessage(''), 3000);
+      } else {
+        alert(result.error || 'Gagal menghapus seluruh karyawan.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan saat menghapus semua data.');
+    }
+  };
+
+
   const handleExportCSV = () => {
     const headers = ['ID Karyawan', 'Nama Lengkap', 'Email', 'Jabatan', 'Status Kerja', 'Gaji Pokok', 'Tunjangan Jabatan', 'Nama Bank', 'Nomor Rekening'];
     const csvRows = [headers.join(',')];
@@ -236,6 +270,62 @@ export default function KaryawanPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const totalPages = Math.ceil(filteredKaryawan.length / rowsPerPage);
+  const paginatedKaryawan = filteredKaryawan.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const handleSearch = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilter = (val: string) => {
+    setStatusFilter(val);
+    setCurrentPage(1);
+  };
+
+  const handleUploadCSV = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadFile) return;
+
+    setUploadLoading(true);
+    setUploadMessage('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('clearExisting', clearExisting.toString());
+
+      const res = await fetch('/api/karyawan/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        setUploadMessage(`Sukses: ${result.summary.berhasil} berhasil, ${result.summary.gagal} gagal.`);
+        fetchKaryawan();
+        setTimeout(() => {
+          setIsUploadModalOpen(false);
+          setUploadFile(null);
+          setUploadMessage('');
+          setClearExisting(false);
+        }, 3000);
+      } else {
+        setUploadMessage(`Error: ${result.error}`);
+      }
+    } catch {
+      setUploadMessage('Terjadi kesalahan koneksi server.');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+
+
   const totalKaryawan = daftarKaryawan.length;
   const tetapCount = daftarKaryawan.filter((e) => e.statusKerja === 'TETAP').length;
   const kontrakCount = daftarKaryawan.filter((e) => e.statusKerja === 'KONTRAK').length;
@@ -248,6 +338,21 @@ export default function KaryawanPage() {
     }).format(num);
   };
 
+  const paginBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    padding: '0.35rem 0.65rem',
+    borderRadius: '8px',
+    border: '1px solid var(--border-light)',
+    background: 'rgba(255,255,255,0.04)',
+    color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
+    fontSize: '0.82rem',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.4 : 1,
+    transition: 'all 0.15s',
+    minWidth: '32px',
+    textAlign: 'center' as const,
+  });
+
+
   return (
     <>
       <div className="page-header">
@@ -255,11 +360,22 @@ export default function KaryawanPage() {
           <h1>Manajemen Data Karyawan</h1>
           <p>Kelola profil lengkap karyawan, jabatan, sistem rekening transfer, dan gaji pokok tetap.</p>
         </div>
-        <button onClick={openAddModal} className="btn btn-primary">
-          <Plus size={18} />
-          <span>Tambah Karyawan</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button onClick={handleDeleteAll} className="btn btn-secondary" style={{ display: 'inline-flex', gap: '0.4rem', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--error)', background: 'rgba(239,68,68,0.06)' }} title="Kosongkan Database Karyawan">
+            <Trash2 size={18} />
+            <span>Hapus Semua</span>
+          </button>
+          <button onClick={() => setIsUploadModalOpen(true)} className="btn btn-secondary" style={{ display: 'inline-flex', gap: '0.4rem', border: '1px solid rgba(99,102,241,0.25)', color: 'var(--primary)', background: 'rgba(99,102,241,0.06)' }}>
+            <Upload size={18} />
+            <span>Upload CSV</span>
+          </button>
+          <button onClick={openAddModal} className="btn btn-primary">
+            <Plus size={18} />
+            <span>Tambah Karyawan</span>
+          </button>
+        </div>
       </div>
+
 
       {/* Stats Summary */}
       <div className="kpi-grid">
@@ -303,21 +419,37 @@ export default function KaryawanPage() {
               className="form-input"
               style={{ paddingLeft: '40px' }}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </div>
-        <div className="form-group" style={{ width: '200px', marginBottom: 0 }}>
-          <select
-            className="form-input"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">Semua Status Kerja</option>
-            <option value="TETAP">Karyawan Tetap (TETAP)</option>
-            <option value="KONTRAK">Karyawan Kontrak (KONTRAK)</option>
-          </select>
-        </div>
+      </div>
+      <div className="form-group" style={{ width: '200px', marginBottom: 0 }}>
+        <select
+          className="form-input"
+          value={statusFilter}
+          onChange={(e) => handleStatusFilter(e.target.value)}
+        >
+          <option value="">Semua Status Kerja</option>
+          <option value="TETAP">Karyawan Tetap (TETAP)</option>
+          <option value="KONTRAK">Karyawan Kontrak (KONTRAK)</option>
+        </select>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <span>Tampilkan:</span>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+          style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)',
+            borderRadius: '8px', color: 'var(--text-primary)', padding: '0.4rem 0.6rem',
+            fontSize: '0.85rem', cursor: 'pointer',
+          }}
+        >
+          {[10, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+        <span>baris</span>
+      </div>
+
         <button onClick={handleExportCSV} className="btn btn-secondary" style={{ display: 'inline-flex', gap: '0.25rem' }} title="Ekspor Data Karyawan CSV">
           <span>Ekspor CSV</span>
         </button>
@@ -351,7 +483,8 @@ export default function KaryawanPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredKaryawan.map((kar) => (
+                {paginatedKaryawan.map((kar) => (
+
                   <tr key={kar.id}>
                     <td>
                       <div style={{ fontWeight: 600 }}>{kar.nama}</div>
@@ -395,7 +528,72 @@ export default function KaryawanPage() {
             </table>
           </div>
         )}
+
+        {/* Pagination Footer */}
+        {!loading && filteredKaryawan.length > 0 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '1.25rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-light)',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}>
+            {/* Info */}
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              Menampilkan <strong>{(currentPage - 1) * rowsPerPage + 1}</strong>–<strong>{Math.min(currentPage * rowsPerPage, filteredKaryawan.length)}</strong> dari <strong>{filteredKaryawan.length}</strong> karyawan
+            </span>
+
+            {/* Page controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                style={paginBtnStyle(currentPage === 1)}
+              >«</button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={paginBtnStyle(currentPage === 1)}
+              >‹</button>
+
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                const page = start + i;
+                if (page > totalPages) return null;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    style={{
+                      ...paginBtnStyle(false),
+                      background: page === currentPage ? 'var(--primary)' : 'rgba(255,255,255,0.04)',
+                      color: page === currentPage ? '#fff' : 'var(--text-secondary)',
+                      fontWeight: page === currentPage ? 700 : 400,
+                      borderColor: page === currentPage ? 'var(--primary)' : 'var(--border-light)',
+                    }}
+                  >{page}</button>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={paginBtnStyle(currentPage === totalPages)}
+              >›</button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                style={paginBtnStyle(currentPage === totalPages)}
+              >»</button>
+            </div>
+          </div>
+        )}
       </div>
+
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
@@ -557,8 +755,72 @@ export default function KaryawanPage() {
           </div>
         </div>
       )}
-      
+
+      {/* CSV Upload Modal */}
+      {isUploadModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <h2>Upload Dataset Karyawan (CSV)</h2>
+              <button onClick={() => setIsUploadModalOpen(false)} className="close-btn" disabled={uploadLoading}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleUploadCSV}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                
+                {uploadMessage && (
+                  <div className={`badge ${uploadMessage.startsWith('Error') ? 'badge-error' : 'badge-success'}`} style={{ width: '100%', padding: '0.75rem', fontSize: '0.85rem', whiteSpace: 'normal', lineHeight: 1.4 }}>
+                    {uploadMessage}
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Pilih File CSV *</label>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="form-input"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    required
+                    disabled={uploadLoading}
+                  />
+                  <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.35rem', lineHeight: 1.4 }}>
+                    Dukung format dataset Kaggle fiktif Indonesia. Kolom minimum yang wajib ada: <strong>Nama</strong>, <strong>Jabatan</strong>, dan <strong>Gaji</strong>.
+                  </small>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
+                  <input
+                    type="checkbox"
+                    id="clear-checkbox"
+                    checked={clearExisting}
+                    onChange={(e) => setClearExisting(e.target.checked)}
+                    disabled={uploadLoading}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  />
+                  <label htmlFor="clear-checkbox" style={{ fontSize: '0.82rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                    Bersihkan / Kosongkan data database lama sebelum import
+                  </label>
+                </div>
+
+              </div>
+              <div className="modal-footer">
+                <button type="button" onClick={() => setIsUploadModalOpen(false)} className="btn btn-secondary" disabled={uploadLoading}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={uploadLoading || !uploadFile} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Upload size={16} />
+                  <span>{uploadLoading ? 'Mengimport...' : 'Import Dataset'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {toastMessage && (
+
         <div className="no-print" style={{
           position: 'fixed',
           bottom: '2rem',

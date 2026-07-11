@@ -63,21 +63,30 @@ Pengujian unit (*Unit Testing*) dijalankan secara otomatis menggunakan framework
 ## 5. Panduan Menjalankan Program untuk Asesor
 
 ### Langkah A: Setup Environment (.env)
-Pastikan berkas `.env` di root direktori telah terisi koneksi Neon PostgreSQL:
+Pastikan berkas `.env` di root direktori telah terisi koneksi database PostgreSQL Anda (misalnya menggunakan Neon Cloud):
 ```env
-DATABASE_URL="postgresql://neondb_owner:npg_omMDv71qZsFk@ep-dark-rain-aoxbunw9-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DATABASE_URL="postgresql://username:password@your-host.neon.tech/neondb?sslmode=require"
 ```
 
 ### Langkah B: Sinkronisasi Database
-Kueri migrasi skema tabel relasional ke Neon:
+Kueri migrasi skema tabel relasional ke database:
 ```bash
 npm run db:push
 ```
 
-### Langkah C: Memasukkan Data Awal (Seeding)
-Masukkan 5 data profil karyawan dan 4 data absensi otomatis:
+### Langkah C: Memasukkan Data Awal (Import Dataset & Seed)
+Untuk memasukkan data dummy default (5 karyawan):
 ```bash
 npm run db:seed
+```
+
+Untuk mengimport dataset karyawan fiktif fiktif Indonesia (1.000 karyawan) dari Kaggle:
+```bash
+# Preview data sebelum import
+npm run db:import:preview
+
+# Eksekusi import 1.000 karyawan ke database
+npm run db:import
 ```
 
 ### Langkah D: Menjalankan Server Lokal
@@ -88,3 +97,4 @@ npm run dev
 Akses sistem penggajian di browser pada alamat **http://localhost:3000**.
 * **Akun Admin Login**: `admin@gajikita.com`
 * **Kata Sandi**: `passwordadmin`
+
