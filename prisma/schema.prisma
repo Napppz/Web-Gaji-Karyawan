@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Karyawan {
+  id               String       @id @default(uuid())
+  nama             String
+  email            String       @unique
+  password         String       @default("karyawan123") // Sandi login karyawan
+  jabatan          String       // e.g. Manager, Developer, Staff, HR
+  statusKerja      String       // TETAP, KONTRAK
+  gajiPokok        Float        // Gaji Pokok
+  tunjanganJabatan Float        @default(0) // Tunjangan Jabatan
+  nomorRekening    String       // Nomor Rekening
+  namaBank         String       // Nama Bank
+  dibuatPada       DateTime     @default(now())
+  diubahPada       DateTime     @updatedAt
+  kehadiran        Kehadiran[]
+  penggajian       Penggajian[]
+  pengajuanIzin    PengajuanIzin[]
+}
+
+model Kehadiran {
+  id          String   @id @default(uuid())
+  karyawanId  String
+  karyawan    Karyawan @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
+  bulan       Int      // 1 - 12
+  tahun       Int      // e.g. 2026
+  hariHadir   Int      // Hari Hadir
+  hariSakit   Int      // Hari Sakit
+  hariCuti    Int      // Hari Cuti
+  hariAlpha   Int      // Hari Absen Tanpa Keterangan (Alpha)
+  dibuatPada  DateTime @default(now())
+  diubahPada  DateTime @updatedAt
+
+  @@unique([karyawanId, bulan, tahun])
+}
+
+model Penggajian {
+  id               String    @id @default(uuid())
+  karyawanId       String
+  karyawan         Karyawan  @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
+  bulan            Int
+  tahun            Int
+  gajiPokok        Float     // Gaji Pokok
+  totalTunjangan   Float     // Total Tunjangan (jabatan + kehadiran)
+  totalPotongan    Float     // Total Potongan (BPJS + absensi)
+  pajakPPh21       Float     // Potongan Pajak PPh 21
+  gajiBersih       Float     // Gaji Bersih
+  statusPembayaran String    // TERTUNDA, LUNAS
+  dibayarPada      DateTime?
+  dibuatPada       DateTime  @default(now())
+  diubahPada       DateTime  @updatedAt
+
+  @@unique([karyawanId, bulan, tahun])
+}
+
+model Pengaturan {
+  id         String   @id @default(uuid())
+  kunci      String   @unique
+  nilai      String
+  dibuatPada DateTime @default(now())
+  diubahPada DateTime @updatedAt
+}
+
+model PengajuanIzin {
+  id             String    @id @default(uuid())
+  karyawanId     String
+  karyawan       Karyawan  @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
+  jenis          String    // SAKIT, CUTI
+  tanggalMulai   String    // Format YYYY-MM-DD
+  tanggalSelesai String    // Format YYYY-MM-DD
+  keterangan     String
+  status         String    @default("PENDING") // PENDING, DISETUJUI, DITOLAK
+  dibuatPada     DateTime  @default(now())
+  diubahPada     DateTime  @updatedAt
+}
+
+model Admin {
+  id         String   @id @default(uuid())
+  nama       String   @default("Administrator")
+  email      String   @unique
+  password   String   // passwordadmin
+  dibuatPada DateTime @default(now())
+  diubahPada DateTime @updatedAt
+}
+
