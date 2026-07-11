@@ -465,118 +465,111 @@ export default function KaryawanDashboard() {
               ))}
             </div>
 
-            {/* ── MAIN GRID: 2 COLUMNS ─────────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+            {/* ── MAIN GRID: 2 COLUMNS (SEJAJAR & SAMA TINGGI) ────────────────────── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
 
-              {/* ── LEFT COLUMN ── */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-                {/* Clock-In Card */}
-                <div className="glass-card" style={{
-                  padding: '2rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  gap: '1.25rem',
-                  background: isClockedIn
-                    ? 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.4) 100%)'
-                    : 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(15,23,42,0.4) 100%)',
-                  border: isClockedIn ? '1px solid rgba(16,185,129,0.18)' : '1px solid rgba(99,102,241,0.18)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isClockedIn ? 'var(--success)' : 'var(--primary)', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    <Clock size={15} />
-                    <span>Absensi Mandiri</span>
+              {/* Clock-In Card */}
+              <div className="glass-card" style={{
+                padding: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center', // Center vertically
+                textAlign: 'center',
+                gap: '1.25rem',
+                height: '100%', // Stretch to full height of grid row
+                background: isClockedIn
+                  ? 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.4) 100%)'
+                  : 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(15,23,42,0.4) 100%)',
+                border: isClockedIn ? '1px solid rgba(16,185,129,0.18)' : '1px solid rgba(99,102,241,0.18)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isClockedIn ? 'var(--success)' : 'var(--primary)', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <Clock size={15} />
+                  <span>Absensi Mandiri</span>
+                </div>
+                
+                {/* Digital Clock display widget */}
+                <div style={{ margin: '0.25rem 0' }}>
+                  <div style={{
+                    fontFamily: 'monospace',
+                    fontSize: '2.5rem',
+                    fontWeight: 900,
+                    color: isClockedIn ? 'var(--success)' : '#fff',
+                    letterSpacing: '2px',
+                    textShadow: isClockedIn ? '0 0 15px rgba(16,185,129,0.35)' : '0 0 15px rgba(99,102,241,0.25)'
+                  }}>
+                    {time || '00:00:00'}
                   </div>
-                  
-                  {/* Digital Clock display widget */}
-                  <div style={{ margin: '0.25rem 0' }}>
-                    <div style={{
-                      fontFamily: 'monospace',
-                      fontSize: '2.5rem',
-                      fontWeight: 900,
-                      color: isClockedIn ? 'var(--success)' : '#fff',
-                      letterSpacing: '2px',
-                      textShadow: isClockedIn ? '0 0 15px rgba(16,185,129,0.35)' : '0 0 15px rgba(99,102,241,0.25)'
-                    }}>
-                      {time || '00:00:00'}
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                      {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>
-
-                  {isClockedIn ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', background: 'rgba(16,185,129,0.08)', padding: '0.65rem 1.75rem', borderRadius: '30px', fontWeight: 700, fontSize: '0.88rem', border: '1px solid rgba(16,185,129,0.15)' }}>
-                      <CheckCircle2 size={16} />
-                      Sudah Absen Masuk
-                    </div>
-                  ) : (
-                    <>
-                      <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', margin: 0 }}>
-                        Klik tombol di bawah untuk mencatat kehadiran Anda hari ini. Batas jam masuk kantor adalah jam yang ditetapkan admin.
-                      </p>
-                      <button onClick={handleClockIn} className="btn btn-primary" style={{ padding: '0.8rem 2.5rem', borderRadius: '30px', fontSize: '0.95rem', fontWeight: 700, boxShadow: '0 8px 20px -8px rgba(99,102,241,0.5)' }}>
-                        Absen Masuk Sekarang
-                      </button>
-                    </>
-                  )}
                 </div>
 
-              </div>
-
-              {/* ── RIGHT COLUMN ── */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-                {/* Grafik Absensi */}
-                <div className="glass-card" style={{ padding: '1.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                    <div style={{ width: '32px', height: '32px', background: 'rgba(99,102,241,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                      <CalendarDays size={16} />
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>Visualisasi Kehadiran</h3>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Rasio absensi bulan {BULAN_LIST[currentMonth - 1].label}</p>
-                    </div>
+                {isClockedIn ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', background: 'rgba(16,185,129,0.08)', padding: '0.65rem 1.75rem', borderRadius: '30px', fontWeight: 700, fontSize: '0.88rem', border: '1px solid rgba(16,185,129,0.15)' }}>
+                    <CheckCircle2 size={16} />
+                    Sudah Absen Masuk
                   </div>
-                  {attendanceData.length === 0 ? (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      Belum ada catatan absensi terdaftar bulan ini.
-                    </div>
-                  ) : (
-                    <div style={{ height: '220px', width: '100%' }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={attendanceData}
-                            cx="50%"
-                            cy="45%"
-                            innerRadius={50}
-                            outerRadius={70}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {attendanceData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem' }}
-                            formatter={(value) => [`${value} Hari`, 'Durasi']}
-                          />
-                          <Legend 
-                            verticalAlign="bottom"
-                            height={36}
-                            iconSize={10}
-                            formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 500 }}>{value}</span>}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-
+                ) : (
+                  <>
+                    <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', margin: 0 }}>
+                      Klik tombol di bawah untuk mencatat kehadiran Anda hari ini. Batas jam masuk kantor adalah jam yang ditetapkan admin.
+                    </p>
+                    <button onClick={handleClockIn} className="btn btn-primary" style={{ padding: '0.8rem 2.5rem', borderRadius: '30px', fontSize: '0.95rem', fontWeight: 700, boxShadow: '0 8px 20px -8px rgba(99,102,241,0.5)' }}>
+                      Absen Masuk Sekarang
+                    </button>
+                  </>
+                )}
               </div>
+
+              {/* Grafik Absensi */}
+              <div className="glass-card" style={{ padding: '1.75rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ width: '32px', height: '32px', background: 'rgba(99,102,241,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                    <CalendarDays size={16} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>Visualisasi Kehadiran</h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Rasio absensi bulan {BULAN_LIST[currentMonth - 1].label}</p>
+                  </div>
+                </div>
+                {attendanceData.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    Belum ada catatan absensi terdaftar bulan ini.
+                  </div>
+                ) : (
+                  <div style={{ height: '220px', width: '100%', flex: 1, display: 'flex', alignItems: 'center', marginTop: '0.5rem' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={attendanceData}
+                          cx="50%"
+                          cy="45%"
+                          innerRadius={50}
+                          outerRadius={70}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {attendanceData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem' }}
+                          formatter={(value) => [`${value} Hari`, 'Durasi']}
+                        />
+                        <Legend 
+                          verticalAlign="bottom"
+                          height={36}
+                          iconSize={10}
+                          formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 500 }}>{value}</span>}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* ── RIWAYAT ABSENSI HARIAN ── */}

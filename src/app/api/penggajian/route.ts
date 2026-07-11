@@ -68,7 +68,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const rekapProses = [];
+    // 1. Ambil status pembayaran yang ada di database saat ini untuk periode ini
+    const existingGaji = await prisma.penggajian.findMany({
+      where: { bulan: b, tahun: t },
+      select: { karyawanId: true, statusPembayaran: true, dibayarPada: true }
+    });
+
+    const statusMap = new Map(
+      existingGaji.map((g: any) => [g.karyawanId, { status: g.statusPembayaran, dibayarPada: g.dibayarPada }])
+    );
+
+    // 2. Siapkan data perhitungan gaji massal
+    const insertDataList: any[] = [];
 
     for (const kar of daftarKaryawan) {
       // Dapatkan data kehadiran atau gunakan default (Hadir penuh)
@@ -80,44 +91,45 @@ export async function POST(request: Request) {
       };
 
       const breakdown = hitungGajiKaryawan(kar.gajiPokok, kar.tunjanganJabatan, absensi);
+      
+      // Ambil status lama jika ada, jika tidak default TERTUNDA
+      const oldStatus = statusMap.get(kar.id);
 
-      // Upsert data penggajian
-      const gaji = await prisma.penggajian.upsert({
-        where: {
-          karyawanId_bulan_tahun: {
-            karyawanId: kar.id,
-            bulan: b,
-            tahun: t,
-          },
-        },
-        update: {
-          gajiPokok: breakdown.gajiPokok,
-          totalTunjangan: breakdown.tunjanganJabatan + breakdown.tunjanganKehadiran,
-          totalPotongan: breakdown.potonganKehadiran + breakdown.bpjsKesehatan + breakdown.bpjsKetenagakerjaan,
-          pajakPPh21: breakdown.pajakPPh21Sebulan,
-          gajiBersih: breakdown.gajiBersih,
-        },
-        create: {
-          karyawanId: kar.id,
-          bulan: b,
-          tahun: t,
-          gajiPokok: breakdown.gajiPokok,
-          totalTunjangan: breakdown.tunjanganJabatan + breakdown.tunjanganKehadiran,
-          totalPotongan: breakdown.potonganKehadiran + breakdown.bpjsKesehatan + breakdown.bpjsKetenagakerjaan,
-          pajakPPh21: breakdown.pajakPPh21Sebulan,
-          gajiBersih: breakdown.gajiBersih,
-          statusPembayaran: 'TERTUNDA',
-        },
-        include: {
-          karyawan: true,
-        },
+      insertDataList.push({
+        karyawanId: kar.id,
+        bulan: b,
+        tahun: t,
+        gajiPokok: breakdown.gajiPokok,
+        totalTunjangan: breakdown.tunjanganJabatan + breakdown.tunjanganKehadiran,
+        totalPotongan: breakdown.potonganKehadiran + breakdown.bpjsKesehatan + breakdown.bpjsKetenagakerjaan,
+        pajakPPh21: breakdown.pajakPPh21Sebulan,
+        gajiBersih: breakdown.gajiBersih,
+        statusPembayaran: oldStatus ? oldStatus.status : 'TERTUNDA',
+        dibayarPada: oldStatus ? oldStatus.dibayarPada : null,
       });
-
-      rekapProses.push(gaji);
     }
 
+    // 3. Eksekusi transaksi database (Delete lama & Insert Baru secara Bulk)
+    await prisma.$transaction([
+      prisma.penggajian.deleteMany({
+        where: { bulan: b, tahun: t }
+      }),
+      prisma.penggajian.createMany({
+        data: insertDataList
+      })
+    ]);
+
+    // 4. Ambil kembali data yang sudah di-insert beserta relasi karyawan untuk di-return
+    const rekapProses = await prisma.penggajian.findMany({
+      where: { bulan: b, tahun: t },
+      include: {
+        karyawan: true,
+      },
+      orderBy: { karyawan: { nama: 'asc' } },
+    });
+
     return NextResponse.json({
-      message: `Berhasil memproses gaji untuk ${rekapProses.length} karyawan.`,
+      message: `Berhasil memproses gaji untuk ${rekapProses.length} karyawan secara kilat.`,
       rekapGaji: rekapProses,
     });
   } catch (error: any) {
