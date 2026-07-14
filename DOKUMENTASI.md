@@ -1,100 +1,101 @@
-# DOKUMENTASI TEKNIS - SISTEM PENGGAJIAN GAJIKITA
+# DOKUMENTASI PROGRAM - APLIKASI PENGGAJIAN KARYAWAN (GAJIKITA)
 **Skema Sertifikasi: Analis Program (SKM-2019-62010-02)**
 
-Dokumen ini disusun untuk menjelaskan arsitektur perangkat lunak, keputusan desain basis data, implementasi algoritma perpajakan, dan metodologi pengujian untuk memenuhi seluruh Unit Kompetensi dalam Sertifikasi Analis Program.
+Dokumen ini menjelaskan struktur kode, desain database, algoritma perhitungan gaji/pajak, dan cara pengujian aplikasi GajiKita untuk kebutuhan penilaian sertifikasi.
 
 ---
 
-## 1. Analisis Skalabilitas Perangkat Lunak (J.620100.002.01)
+## 1. Analisis & Struktur Aplikasi (J.620100.002.01)
 
-Sistem Informasi Penggajian GajiKita dirancang menggunakan arsitektur modern Next.js App Router yang mendukung skalabilitas horizontal dan vertikal:
-* **Serverless Compute**: Menghilangkan beban pengelolaan server fisik. Waktu pemrosesan API diskalakan secara otomatis berdasarkan beban lalu lintas request.
-* **Database Connection Pooling**: Karena menggunakan Neon serverless database, sistem ini mengimplementasikan kueri melalui pool koneksi terkelola (`pg` pool). Hal ini mencegah penumpukan koneksi database saat ratusan prosesor payroll memproses penggajian secara simultan.
-* **Optimasi Render Sisi Klien (CSR)**: Halaman analitik dan manajemen menggunakan fetching dinamis sisi klien (`useEffect`) dengan caching state. Hal ini mengurangi beban kerja CPU server, sehingga server Next.js hanya fokus melayani data JSON mentah yang sangat ringan.
+Aplikasi GajiKita dibuat menggunakan Next.js (App Router) dengan fokus pada kemudahan maintenance dan efisiensi resource:
+* **Connection Pooling**: Koneksi database PostgreSQL menggunakan connection pool dari library `pg` agar aplikasi tidak crash saat diakses banyak user secara bersamaan.
+* **Client-Side Rendering (CSR)**: Halaman dashboard dan input menggunakan CSR untuk meminimalkan beban rendering di sisi server. Server hanya bertugas melayani data API dalam format JSON.
 
 ---
 
-## 2. Akses Basis Data & Penggunaan SQL (J.620100.020.02 / J.620100.021.02)
+## 2. Struktur Database & Akses SQL (J.620100.020.02 / J.620100.021.02)
 
-Aplikasi ini menggunakan PostgreSQL terkelola di **Neon Cloud** dengan **Prisma ORM** sebagai jembatan data.
-* **Skema Relasional**:
-  * Relasi Satu-ke-Banyak (*One-to-Many*) antara tabel `Karyawan` dengan `Kehadiran`.
-  * Relasi Satu-ke-Banyak (*One-to-Many*) antara tabel `Karyawan` dengan `Penggajian`.
-* **Indeks & Integritas Kueri**:
-  * Indeks unik gabungan `@@unique([karyawanId, bulan, tahun])` pada tabel `Kehadiran` dan `Penggajian`. Ini memastikan integritas data agar tidak terjadi duplikasi entri gaji atau absensi karyawan pada periode bulan/tahun yang sama.
-  * Penghapusan Berjenjang (`onDelete: Cascade`) diterapkan secara otomatis pada kunci asing (*foreign key*) relasi karyawan. Ketika data profil karyawan dihapus, database PostgreSQL secara otomatis membersihkan rekam jejak absensi dan penggajian yang berkaitan secara instan untuk menjaga konsistensi data.
+Penyimpanan data menggunakan database PostgreSQL yang dihubungkan melalui Prisma ORM.
+
+* **Relasi Tabel**:
+  * **Karyawan ke Kehadiran**: Relasi One-to-Many (Satu Karyawan memiliki banyak data absensi per bulan).
+  * **Karyawan ke Penggajian**: Relasi One-to-Many (Satu Karyawan memiliki banyak slip gaji bulanan).
+* **Aturan Database (Integritas Data)**:
+  * **Composite Unique Key**: Kombinasi `karyawanId`, `bulan`, dan `tahun` dibuat unik (`@@unique`) agar tidak ada data gaji atau absensi ganda untuk satu karyawan di bulan yang sama.
+  * **Cascade Delete**: Jika data Karyawan dihapus, seluruh data absensi dan penggajian yang berhubungan akan terhapus otomatis (`onDelete: Cascade`) untuk menjaga konsistensi database.
 
 ---
 
 ## 3. Algoritma Perhitungan Gaji & PPh 21 (J.620100.022.02)
 
-Logika perhitungan slip gaji diimplementasikan secara terisolasi pada modul utilitas TypeScript di [salaryCalculator.ts](file:///c:/Users/PC/Documents/Projekl/Web-Gaji-Karyawan/src/utils/salaryCalculator.ts):
-1. **Gaji Kotor** = Gaji Pokok + Tunjangan Jabatan + Tunjangan Kehadiran (Rp 50.000 × hari hadir).
-2. **Potongan Absensi** = (Gaji Pokok / 22 hari kerja standar) × hari absen alpha.
-3. **Iuran BPJS Ketenagakerjaan JHT** = 2% dari Gaji Pokok.
-4. **Iuran BPJS Kesehatan** = 1% dari Gaji Pokok.
-5. **Pajak Penghasilan (PPh 21) Progresif**:
-   * **Pengampunan Pajak**: Dikurangi Biaya Jabatan (5% dari gaji kotor, maksimal Rp 500.000 sebulan) dan BPJS JHT.
-   * **PTKP (Penghasilan Tidak Kena Pajak)**: Menggunakan standar dasar Indonesia TK/0 sebesar Rp 54.000.000 per tahun.
-   * **Tarif Pajak Pasal 17 UU HPP**:
-     * Pendapatan Kena Pajak (PKP) ≤ Rp 60 Juta setahun dikenakan tarif **5%**.
-     * Rp 60 Juta < PKP ≤ Rp 250 Juta setahun dikenakan tarif **15%**.
-     * Rp 250 Juta < PKP ≤ Rp 500 Juta setahun dikenakan tarif **25%**.
-     * Rp 500 Juta < PKP ≤ Rp 5 Miliar setahun dikenakan tarif **30%**.
-     * PKP > Rp 5 Miliar setahun dikenakan tarif **35%**.
+Seluruh logika perhitungan gaji dipusatkan pada file `src/utils/salaryCalculator.ts`.
+
+1. **Gaji Kotor**: 
+   * Rumus: `Gaji Pokok + Tunjangan Jabatan + Tunjangan Kehadiran (Rp 50.000 × hari hadir)`.
+2. **Potongan Kehadiran**:
+   * Denda jika karyawan tidak masuk tanpa keterangan (Alpha).
+   * Rumus: `(Gaji Pokok / 22 hari kerja) × hari Alpha`.
+3. **BPJS**:
+   * BPJS Kesehatan: 1% dari Gaji Pokok.
+   * BPJS Ketenagakerjaan (JHT): 2% dari Gaji Pokok.
+4. **Pajak PPh 21 Progresif**:
+   * **Pengurangan Gaji Kotor**: Gaji kotor dikurangi biaya jabatan (5%, maks Rp 500.000) dan iuran BPJS JHT.
+   * **PTKP**: Menggunakan tarif PTKP TK/0 (belum menikah, tanpa tanggungan) sebesar Rp 54.000.000 per tahun.
+   * **Lapis Tarif Pajak (Pasal 17 UU HPP)**:
+     * PKP sampai Rp 60 Juta/tahun = Tarif 5%
+     * PKP Rp 60 Juta s/d Rp 250 Juta/tahun = Tarif 15%
+     * PKP Rp 250 Juta s/d Rp 500 Juta/tahun = Tarif 25%
+     * PKP Rp 500 Juta s/d Rp 5 Miliar/tahun = Tarif 30%
+     * PKP di atas Rp 5 Miliar/tahun = Tarif 35%
 
 ---
 
-## 4. Metodologi Pengujian Unit (J.620100.033.02)
+## 4. Pengujian Unit / Unit Testing (J.620100.033.02)
 
-Pengujian unit (*Unit Testing*) dijalankan secara otomatis menggunakan framework **Vitest** untuk memvalidasi presisi matematika perhitungan pajak dan gaji bersih:
-* File Test: [salaryCalculator.test.ts](file:///c:/Users/PC/Documents/Projekl/Web-Gaji-Karyawan/src/utils/salaryCalculator.test.ts)
-* Kasus Uji mencakup:
-  * Penghitungan pajak bernilai 0 untuk pendapatan di bawah PTKP.
-  * Uji komputasi persentase progresif multi-bracket (melewati batas Rp 60.000.000).
-  * Uji denda pemotongan hari alpha.
-* Perintah Eksekusi:
-  ```bash
-  npm run test
-  ```
+Pengujian logika fungsi perhitungan dilakukan menggunakan framework **Vitest** di file `src/utils/salaryCalculator.test.ts`. 
 
----
+Pengujian ini mencakup:
+* Perhitungan pajak Rp 0 untuk karyawan dengan pendapatan di bawah PTKP.
+* Perhitungan pajak progresif dengan tarif berlapis (untuk PKP di atas Rp 60.000.000).
+* Akurasi pemotongan denda absensi (Alpha).
 
-## 5. Panduan Menjalankan Program untuk Asesor
-
-### Langkah A: Setup Environment (.env)
-Pastikan berkas `.env` di root direktori telah terisi koneksi database PostgreSQL Anda (misalnya menggunakan Neon Cloud):
-```env
-DATABASE_URL="postgresql://username:password@your-host.neon.tech/neondb?sslmode=require"
+Menjalankan pengujian:
+```bash
+npm run test
 ```
 
-### Langkah B: Sinkronisasi Database
-Kueri migrasi skema tabel relasional ke database:
+---
+
+## 5. Panduan Instalasi dan Setup untuk Pengujian
+
+### Langkah 1: Konfigurasi Database (.env)
+Buat file `.env` di root folder dan masukkan string koneksi database PostgreSQL Anda:
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/payroll"
+```
+
+### Langkah 2: Sinkronisasi Skema Database
+Kirim skema tabel ke database:
 ```bash
 npm run db:push
 ```
 
-### Langkah C: Memasukkan Data Awal (Import Dataset & Seed)
-Untuk memasukkan data dummy default (5 karyawan):
+### Langkah 3: Seeding & Import Data Awal
+Untuk memasukkan data user admin dan beberapa karyawan contoh:
 ```bash
 npm run db:seed
 ```
 
-Untuk mengimport dataset karyawan fiktif fiktif Indonesia (1.000 karyawan) dari Kaggle:
+Untuk mengimport 1.000 dataset karyawan:
 ```bash
-# Preview data sebelum import
-npm run db:import:preview
-
-# Eksekusi import 1.000 karyawan ke database
 npm run db:import
 ```
 
-### Langkah D: Menjalankan Server Lokal
-Jalankan Next.js development server:
+### Langkah 4: Jalankan Aplikasi
+Jalankan aplikasi di mode development:
 ```bash
 npm run dev
 ```
-Akses sistem penggajian di browser pada alamat **http://localhost:3000**.
-* **Akun Admin Login**: `admin@gajikita.com`
-* **Kata Sandi**: `passwordadmin`
-
+Buka **http://localhost:3000** di browser.
+* **Email Admin**: `admin@gajikita.com`
+* **Password**: `passwordadmin`
