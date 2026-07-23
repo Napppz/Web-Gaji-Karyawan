@@ -81,6 +81,12 @@ export async function POST(request: Request) {
     // 2. Siapkan data perhitungan gaji massal
     const insertDataList: any[] = [];
 
+    // Ambil tarif lembur dari pengaturan
+    const settingLembur = await prisma.pengaturan.findUnique({
+      where: { kunci: 'TARIF_LEMBUR' },
+    });
+    const tarifLembur = settingLembur ? parseInt(settingLembur.nilai) || 30000 : 30000;
+
     for (const kar of daftarKaryawan) {
       // Dapatkan data kehadiran atau gunakan default (Hadir penuh)
       const absensi = kar.kehadiran[0] || {
@@ -88,9 +94,10 @@ export async function POST(request: Request) {
         hariSakit: 0,
         hariCuti: 0,
         hariAlpha: 0,
+        jamLembur: 0,
       };
 
-      const breakdown = hitungGajiKaryawan(kar.gajiPokok, kar.tunjanganJabatan, absensi);
+      const breakdown = hitungGajiKaryawan(kar.gajiPokok, kar.tunjanganJabatan, absensi, tarifLembur);
       
       // Ambil status lama jika ada, jika tidak default TERTUNDA
       const oldStatus = statusMap.get(kar.id);
@@ -104,6 +111,7 @@ export async function POST(request: Request) {
         totalPotongan: breakdown.potonganKehadiran + breakdown.bpjsKesehatan + breakdown.bpjsKetenagakerjaan,
         pajakPPh21: breakdown.pajakPPh21Sebulan,
         gajiBersih: breakdown.gajiBersih,
+        gajiLembur: breakdown.gajiLembur,
         statusPembayaran: oldStatus ? oldStatus.status : 'TERTUNDA',
         dibayarPada: oldStatus ? oldStatus.dibayarPada : null,
       });

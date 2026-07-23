@@ -74,4 +74,21 @@ describe('hitungGajiKaryawan', () => {
 
     expect(hasil.potonganKehadiran).toBe(1000000);
   });
+
+  it('harus menghitung gaji lembur dengan benar dan menambahkannya ke gaji kotor', () => {
+    // Gaji Pokok: Rp 8.000.000. Tunjangan Jabatan: Rp 1.500.000
+    // Kehadiran: 22 hari hadir, 0 alpha, 10 jam lembur.
+    // Tarif Lembur: Rp 30.000 / jam -> Total Lembur = 300.000
+    // Gaji Kotor = 8M + 1.5M + (22 * 50rb) + 300rb = 10.9M
+    const hasil = hitungGajiKaryawan(8000000, 1500000, {
+      hariHadir: 22,
+      hariSakit: 0,
+      hariCuti: 0,
+      hariAlpha: 0,
+      jamLembur: 10,
+    });
+
+    expect(hasil.gajiLembur).toBe(300000);
+    expect(hasil.gajiKotor).toBe(10900000);
+  });
 });

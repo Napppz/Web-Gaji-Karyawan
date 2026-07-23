@@ -49,6 +49,8 @@ export default function KaryawanDashboard() {
   const [toastMessage, setToastMessage] = useState('');
   const [showWelcome, setShowWelcome] = useState(true);
 
+  const [isMounted, setIsMounted] = useState(false);
+
   // Upgrade States
   const [clockInLogs, setClockInLogs] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -98,6 +100,7 @@ export default function KaryawanDashboard() {
   };
 
   useEffect(() => {
+    setIsMounted(true);
     const sessionStr = localStorage.getItem('employeeSession');
     if (sessionStr) {
       const session = JSON.parse(sessionStr);
@@ -538,35 +541,37 @@ export default function KaryawanDashboard() {
                     Belum ada catatan absensi terdaftar bulan ini.
                   </div>
                 ) : (
-                  <div style={{ height: '220px', width: '100%', flex: 1, display: 'flex', alignItems: 'center', marginTop: '0.5rem' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={attendanceData}
-                          cx="50%"
-                          cy="45%"
-                          innerRadius={50}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {attendanceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem' }}
-                          formatter={(value) => [`${value} Hari`, 'Durasi']}
-                        />
-                        <Legend 
-                          verticalAlign="bottom"
-                          height={36}
-                          iconSize={10}
-                          formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 500 }}>{value}</span>}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  isMounted && (
+                    <div style={{ width: '100%', height: '220px', position: 'relative', marginTop: '0.5rem' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={attendanceData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={70}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {attendanceData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem' }}
+                            formatter={(value) => [`${value} Hari`, 'Durasi']}
+                          />
+                          <Legend 
+                            verticalAlign="bottom"
+                            height={36}
+                            iconSize={10}
+                            formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 500 }}>{value}</span>}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )
                 )}
               </div>
 

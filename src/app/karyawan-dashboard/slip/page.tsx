@@ -260,7 +260,7 @@ export default function KaryawanSlipPage() {
 
                   {/* Kehadiran Summary */}
                   <div style={{ fontSize: '0.85rem', marginBottom: '1.5rem', padding: '0.5rem', border: '1px dashed #cbd5e1', borderRadius: '4px', color: '#475569' }}>
-                    <strong>Rincian Kehadiran:</strong> Hadir: {selectedSlip.kehadiran.hariHadir} hari | Sakit: {selectedSlip.kehadiran.hariSakit} hari | Cuti: {selectedSlip.kehadiran.hariCuti} hari | Absen (Alpha): {selectedSlip.kehadiran.hariAlpha} hari
+                    <strong>Rincian Kehadiran:</strong> Hadir: {selectedSlip.kehadiran.hariHadir} hari | Sakit: {selectedSlip.kehadiran.hariSakit} hari | Cuti: {selectedSlip.kehadiran.hariCuti} hari | Absen (Alpha): {selectedSlip.kehadiran.hariAlpha} hari | Lembur: {selectedSlip.kehadiran.jamLembur || 0} jam
                   </div>
 
                   {/* Perincian Penerimaan & Potongan */}
@@ -281,9 +281,15 @@ export default function KaryawanSlipPage() {
                         <span>Tunjangan Kehadiran</span>
                         <span>{formatIDR(Math.max(0, selectedSlip.totalTunjangan - selectedSlip.karyawan.tunjanganJabatan))}</span>
                       </div>
+                      {(selectedSlip.gajiLembur || 0) > 0 && (
+                        <div className="slip-item">
+                          <span>Uang Lembur ({selectedSlip.kehadiran.jamLembur || 0} Jam)</span>
+                          <span>{formatIDR(selectedSlip.gajiLembur)}</span>
+                        </div>
+                      )}
                       <div className="slip-total">
                         <span>Total Gaji Kotor</span>
-                        <span>{formatIDR(selectedSlip.gajiPokok + selectedSlip.totalTunjangan)}</span>
+                        <span>{formatIDR(selectedSlip.gajiPokok + selectedSlip.totalTunjangan + (selectedSlip.gajiLembur || 0))}</span>
                       </div>
                     </div>
 

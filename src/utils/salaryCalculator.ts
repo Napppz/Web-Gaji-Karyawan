@@ -8,12 +8,14 @@ export interface InputKehadiran {
   hariSakit: number;
   hariCuti: number;
   hariAlpha: number; // Tanpa keterangan
+  jamLembur?: number; // Jam kerja lembur
 }
 
 export interface RincianGaji {
   gajiPokok: number;
   tunjanganJabatan: number;
   tunjanganKehadiran: number;     // Rp 50.000 per hari hadir
+  gajiLembur: number;             // Uang upah lembur
   gajiKotor: number;              // Total Gaji Kotor
   potonganKehadiran: number;      // Potongan Alpha
   bpjsKesehatan: number;          // Potongan BPJS Kes (1%)
@@ -96,11 +98,14 @@ export function hitungPajakProgresif(pkp: number): number {
 export function hitungGajiKaryawan(
   gajiPokok: number,
   tunjanganJabatan: number,
-  kehadiran: InputKehadiran
+  kehadiran: InputKehadiran,
+  tarifLemburPerJam: number = 30000
 ): RincianGaji {
-  // 1. Tunjangan Kehadiran
+  // 1. Tunjangan Kehadiran & Lembur
   const tunjanganKehadiran = kehadiran.hariHadir * TUNJANGAN_HADIR_PER_HARI;
-  const gajiKotor = gajiPokok + tunjanganJabatan + tunjanganKehadiran;
+  const jamLembur = kehadiran.jamLembur || 0;
+  const gajiLembur = jamLembur * tarifLemburPerJam;
+  const gajiKotor = gajiPokok + tunjanganJabatan + tunjanganKehadiran + gajiLembur;
 
   // 2. Potongan Absensi (Proposional Hari Alpha)
   const potonganKehadiran = gajiPokok > 0
@@ -136,6 +141,7 @@ export function hitungGajiKaryawan(
     gajiPokok,
     tunjanganJabatan,
     tunjanganKehadiran,
+    gajiLembur,
     gajiKotor,
     potonganKehadiran,
     bpjsKesehatan,

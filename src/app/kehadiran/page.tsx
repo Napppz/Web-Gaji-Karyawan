@@ -17,6 +17,7 @@ interface KehadiranRecord {
     hariSakit: number;
     hariCuti: number;
     hariAlpha: number;
+    jamLembur: number;
   };
 }
 
@@ -57,6 +58,7 @@ export default function KehadiranPage() {
     hariSakit: 0,
     hariCuti: 0,
     hariAlpha: 0,
+    jamLembur: 0,
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,6 +97,7 @@ export default function KehadiranPage() {
       hariSakit: rec.kehadiran.id ? rec.kehadiran.hariSakit : 0,
       hariCuti: rec.kehadiran.id ? rec.kehadiran.hariCuti : 0,
       hariAlpha: rec.kehadiran.id ? rec.kehadiran.hariAlpha : 0,
+      jamLembur: rec.kehadiran.id ? rec.kehadiran.jamLembur : 0,
     });
     setIsModalOpen(true);
   };
@@ -117,6 +120,7 @@ export default function KehadiranPage() {
       hariSakit: formData.hariSakit,
       hariCuti: formData.hariCuti,
       hariAlpha: formData.hariAlpha,
+      jamLembur: formData.jamLembur,
     };
 
     try {
@@ -142,7 +146,7 @@ export default function KehadiranPage() {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Nama Karyawan', 'Email', 'Jabatan', 'Hari Hadir', 'Hari Sakit', 'Hari Cuti', 'Hari Alpha', 'Status Input'];
+    const headers = ['Nama Karyawan', 'Email', 'Jabatan', 'Hari Hadir', 'Hari Sakit', 'Hari Cuti', 'Hari Alpha', 'Jam Lembur', 'Status Input'];
     const csvRows = [headers.join(',')];
     
     filteredRecords.forEach((rec) => {
@@ -154,6 +158,7 @@ export default function KehadiranPage() {
         rec.kehadiran.hariSakit,
         rec.kehadiran.hariCuti,
         rec.kehadiran.hariAlpha,
+        rec.kehadiran.jamLembur || 0,
         rec.kehadiran.id ? 'Tercatat' : 'Belum Diisi'
       ];
       csvRows.push(row.join(','));
@@ -298,6 +303,7 @@ export default function KehadiranPage() {
                   <th style={{ textAlign: 'center' }}>Hari Sakit</th>
                   <th style={{ textAlign: 'center' }}>Hari Cuti</th>
                   <th style={{ textAlign: 'center' }}>Hari Alpha</th>
+                  <th style={{ textAlign: 'center' }}>Lembur</th>
                   <th style={{ textAlign: 'center' }}>Status Input</th>
                   <th style={{ textAlign: 'right' }}>Aksi</th>
                 </tr>
@@ -321,6 +327,9 @@ export default function KehadiranPage() {
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 600, color: rec.kehadiran.hariAlpha > 0 ? 'var(--error)' : 'var(--text-secondary)' }}>
                       {rec.kehadiran.hariAlpha} Hari
+                    </td>
+                    <td style={{ textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+                      {rec.kehadiran.jamLembur || 0} Jam
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <span className={`badge ${rec.kehadiran.id ? 'badge-success' : 'badge-warning'}`}>
@@ -483,6 +492,21 @@ export default function KehadiranPage() {
                       value={formData.hariAlpha}
                       onChange={handleInputChange}
                       required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: '0 0 50%' }}>
+                    <label className="form-label">Jam Lembur (Overtime)</label>
+                    <input
+                      type="number"
+                      name="jamLembur"
+                      min="0"
+                      max="200"
+                      className="form-input"
+                      value={formData.jamLembur}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>

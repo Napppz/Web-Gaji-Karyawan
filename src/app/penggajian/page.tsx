@@ -26,6 +26,7 @@ interface PenggajianRecord {
   totalPotongan: number;
   pajakPPh21: number;
   gajiBersih: number;
+  gajiLembur: number;
   statusPembayaran: string; // TERTUNDA, LUNAS
   dibayarPada: string | null;
 }
@@ -36,6 +37,7 @@ interface SelectedSlipDetails extends PenggajianRecord {
     hariSakit: number;
     hariCuti: number;
     hariAlpha: number;
+    jamLembur: number;
   };
 }
 
@@ -618,7 +620,7 @@ export default function PenggajianPage() {
                   </div>
 
                   <div style={{ fontSize: '0.85rem', marginBottom: '1.5rem', padding: '0.5rem', border: '1px dashed #cbd5e1', borderRadius: '4px', color: '#475569' }}>
-                    <strong>Rincian Kehadiran:</strong> Hadir: {selectedSlip.kehadiran.hariHadir} hari | Sakit: {selectedSlip.kehadiran.hariSakit} hari | Cuti: {selectedSlip.kehadiran.hariCuti} hari | Absen (Alpha): {selectedSlip.kehadiran.hariAlpha} hari
+                    <strong>Rincian Kehadiran:</strong> Hadir: {selectedSlip.kehadiran.hariHadir} hari | Sakit: {selectedSlip.kehadiran.hariSakit} hari | Cuti: {selectedSlip.kehadiran.hariCuti} hari | Absen (Alpha): {selectedSlip.kehadiran.hariAlpha} hari | Lembur: {selectedSlip.kehadiran.jamLembur || 0} jam
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
@@ -637,9 +639,15 @@ export default function PenggajianPage() {
                         <span>Tunjangan Kehadiran</span>
                         <span>{formatIDR(Math.max(0, selectedSlip.totalTunjangan - selectedSlip.karyawan.tunjanganJabatan))}</span>
                       </div>
+                      {(selectedSlip.gajiLembur || 0) > 0 && (
+                        <div className="slip-item">
+                          <span>Uang Lembur ({selectedSlip.kehadiran.jamLembur || 0} Jam)</span>
+                          <span>{formatIDR(selectedSlip.gajiLembur)}</span>
+                        </div>
+                      )}
                       <div className="slip-total">
                         <span>Total Gaji Kotor</span>
-                        <span>{formatIDR(selectedSlip.gajiPokok + selectedSlip.totalTunjangan)}</span>
+                        <span>{formatIDR(selectedSlip.gajiPokok + selectedSlip.totalTunjangan + (selectedSlip.gajiLembur || 0))}</span>
                       </div>
                     </div>
 

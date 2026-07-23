@@ -40,6 +40,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         hariSakit: 0,
         hariCuti: 0,
         hariAlpha: 0,
+        jamLembur: 0,
       },
     });
   } catch (error: any) {

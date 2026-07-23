@@ -37,6 +37,7 @@ model Kehadiran {
   hariSakit   Int      // Hari Sakit
   hariCuti    Int      // Hari Cuti
   hariAlpha   Int      // Hari Absen Tanpa Keterangan (Alpha)
+  jamLembur   Int      @default(0) // Jam Kerja Lembur
   dibuatPada  DateTime @default(now())
   diubahPada  DateTime @updatedAt
 
@@ -54,6 +55,7 @@ model Penggajian {
   totalPotongan    Float     // Total Potongan (BPJS + absensi)
   pajakPPh21       Float     // Potongan Pajak PPh 21
   gajiBersih       Float     // Gaji Bersih
+  gajiLembur       Float     @default(0) // Gaji Lembur
   statusPembayaran String    // TERTUNDA, LUNAS
   dibayarPada      DateTime?
   dibuatPada       DateTime  @default(now())

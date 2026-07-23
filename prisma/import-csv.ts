@@ -25,7 +25,10 @@ import 'dotenv/config';
 // ──────────────────────────────────────────────
 // PATH FILE CSV
 // ──────────────────────────────────────────────
-const CSV_FILE_PATH = path.join(__dirname, 'data', 'karyawan.csv');
+let CSV_FILE_PATH = path.join(__dirname, 'dataset_penggajian_100_karyawan_jurusan_kantor_dengan_lembur.csv');
+if (!fs.existsSync(CSV_FILE_PATH)) {
+  CSV_FILE_PATH = path.join(__dirname, 'data', 'karyawan.csv');
+}
 
 // ──────────────────────────────────────────────
 // KONSTANTA
@@ -181,21 +184,23 @@ async function main() {
   // ── TRANSFORMASI DATA ──
   const emailSet = new Set<string>();
   const karyawanList = rows.map((row, index) => {
-    // Ambil nilai dari CSV — sesuai kolom dataset Kaggle ini
-    const nama        = row['nama']       || `Karyawan ${index + 1}`;
-    const jabatan     = row['jabatan']    || 'Staff';
-    const gaji        = parseGaji(row['gaji'] || '');
-    const email_raw   = row['email']      || '';
-    const departemen  = row['departemen'] || '';
+    // Check if new CSV fields exist, otherwise fall back to old CSV format
+    const nama = row['nama_karyawan'] || row['nama'] || `Karyawan ${index + 1}`;
+    const email_raw = row['email'] || '';
+    const jabatan = row['jabatan'] || 'Staff';
+    const statusKerja = (row['status_kerja'] || '').toUpperCase() === 'KONTRAK' ? 'KONTRAK' : 'TETAP';
+    const gajiPokok = parseGaji(row['gaji_pokok'] || row['gaji'] || '');
+    const tunjanganJabatan = parseGaji(row['tunjangan_jabatan'] || '');
+    const namaBank = row['bank'] || row['nama_bank'] || 'BCA';
+    const nomorRekening = row['no_rekening'] || row['nomor_rekening'] || generateNoRek();
 
-    // Hitung tunjangan berdasarkan jabatan
-    const tunjanganJabatan = hitungTunjangan(gaji, jabatan);
-
-    // Tentukan bank berdasarkan departemen
-    const namaBank = tentukanBank(departemen);
-
-    // Tentukan status kerja
-    const statusKerja = tentukanStatus(jabatan);
+    // Attendance data parsed from the CSV row, or fall back to generateKehadiran
+    const hasKehadiran = row['hari_hadir'] !== undefined;
+    const hariHadir = hasKehadiran ? parseInt(row['hari_hadir']) || 0 : undefined;
+    const hariSakit = hasKehadiran ? parseInt(row['hari_sakit']) || 0 : undefined;
+    const hariCuti = hasKehadiran ? parseInt(row['hari_cuti']) || 0 : undefined;
+    const hariAlpha = hasKehadiran ? parseInt(row['hari_alpha']) || 0 : undefined;
+    const jamLembur = hasKehadiran ? parseInt(row['jam_lembur']) || 0 : undefined;
 
     // Handle duplikat email
     let email = email_raw || `karyawan${index + 1}@nappz.co.id`;
@@ -209,14 +214,18 @@ async function main() {
       email,
       jabatan: jabatan.trim(),
       statusKerja,
-      gajiPokok: gaji,
-      tunjanganJabatan,
-      namaBank,
-      nomorRekening: generateNoRek(),
+      gajiPokok,
+      tunjanganJabatan: tunjanganJabatan || hitungTunjangan(gajiPokok, jabatan),
+      namaBank: namaBank || tentukanBank(jabatan),
+      nomorRekening,
       password: DEFAULT_PASSWORD,
-      // Info tambahan untuk ditampilkan (tidak masuk DB)
-      _departemen: departemen,
-      _usia: row['usia'] || '-',
+      _kehadiran: hasKehadiran ? {
+        hariHadir,
+        hariSakit,
+        hariCuti,
+        hariAlpha,
+        jamLembur,
+      } : undefined,
     };
   });
 
@@ -226,7 +235,10 @@ async function main() {
   karyawanList.slice(0, 5).forEach((k, i) => {
     console.log(`[${i + 1}] ${k.nama.padEnd(28)} | ${k.jabatan.padEnd(15)} | ${k.statusKerja}`);
     console.log(`    Gaji: Rp ${k.gajiPokok.toLocaleString('id-ID').padEnd(14)} | Tunjangan: Rp ${k.tunjanganJabatan.toLocaleString('id-ID')}`);
-    console.log(`    Dept: ${k._departemen.padEnd(12)} | Bank: ${k.namaBank} | ${k.email}`);
+    console.log(`    Bank: ${k.namaBank} | Rek: ${k.nomorRekening} | ${k.email}`);
+    if (k._kehadiran) {
+      console.log(`    Absensi: Hadir ${k._kehadiran.hariHadir} | Sakit ${k._kehadiran.hariSakit} | Cuti ${k._kehadiran.hariCuti} | Alpha ${k._kehadiran.hariAlpha} | Lembur ${k._kehadiran.jamLembur} jam`);
+    }
     console.log('');
   });
   console.log('─'.repeat(65));
@@ -272,8 +284,8 @@ async function main() {
     const kehadiranDataList: any[] = [];
 
     karyawanList.forEach((k) => {
-      // Destructure: hilangkan field _departemen & _usia sebelum insert
-      const { _departemen: _d, _usia: _u, ...dataInsert } = k;
+      // Destructure: remove temporary field before insert
+      const { _kehadiran, ...dataInsert } = k;
       const karyawanId = randomUUID();
 
       karyawanDataList.push({
@@ -283,7 +295,9 @@ async function main() {
 
       kehadiranDataList.push({
         karyawanId,
-        ...generateKehadiran(bulan, tahun),
+        bulan,
+        tahun,
+        ...( _kehadiran || generateKehadiran(bulan, tahun) ),
       });
     });
 

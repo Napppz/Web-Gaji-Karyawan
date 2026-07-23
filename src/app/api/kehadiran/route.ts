@@ -43,6 +43,7 @@ export async function GET(request: Request) {
               hariSakit: hadir.hariSakit,
               hariCuti: hadir.hariCuti,
               hariAlpha: hadir.hariAlpha,
+              jamLembur: hadir.jamLembur,
             }
           : {
               id: null,
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
               hariSakit: 0,
               hariCuti: 0,
               hariAlpha: 0,
+              jamLembur: 0,
             },
       };
     });
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { karyawanId, bulan, tahun, hariHadir, hariSakit, hariCuti, hariAlpha } = body;
+    const { karyawanId, bulan, tahun, hariHadir, hariSakit, hariCuti, hariAlpha, jamLembur } = body;
 
     if (!karyawanId || bulan === undefined || tahun === undefined || hariHadir === undefined || hariSakit === undefined || hariCuti === undefined || hariAlpha === undefined) {
       return NextResponse.json(
@@ -82,6 +84,7 @@ export async function POST(request: Request) {
     const hSakit = parseInt(hariSakit);
     const hCuti = parseInt(hariCuti);
     const hAlpha = parseInt(hariAlpha);
+    const jLembur = parseInt(jamLembur) || 0;
 
     // Pastikan karyawan terdaftar
     const karyawan = await prisma.karyawan.findUnique({
@@ -106,6 +109,7 @@ export async function POST(request: Request) {
         hariSakit: hSakit,
         hariCuti: hCuti,
         hariAlpha: hAlpha,
+        jamLembur: jLembur,
       },
       create: {
         karyawanId,
@@ -115,6 +119,7 @@ export async function POST(request: Request) {
         hariSakit: hSakit,
         hariCuti: hCuti,
         hariAlpha: hAlpha,
+        jamLembur: jLembur,
       },
     });
 
