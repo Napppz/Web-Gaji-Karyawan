@@ -994,21 +994,13 @@ body {
 /* Printing logic */
 @media print {
 
-  html {
+  html, body {
     background-color: #fff !important;
-    color: #000 !important;
+    color: #1e293b !important;
     height: auto !important;
     overflow: visible !important;
-    font-size: 14px !important;
-  }
-
-  body {
-    background-color: #fff !important;
-    color: #000 !important;
-    height: auto !important;
-    overflow: visible !important;
-    font-size: 14px !important;
-    margin: 15mm 20mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .sidebar,
@@ -1047,6 +1039,7 @@ body {
     background: none !important;
     box-shadow: none !important;
     max-width: 100% !important;
+    width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     animation: none !important;
@@ -1057,78 +1050,199 @@ body {
     padding: 0 !important;
     max-height: none !important;
     overflow-y: visible !important;
+    background: none !important;
   }
 
+  /* SLIP GAJI CARD — tampilan identik dengan digital */
   .slip-gaji-card {
-    border: none !important;
-    background-color: #fff !important;
-    color: #000 !important;
     max-width: 100% !important;
-    padding: 1.5rem 1rem !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 10mm 12mm !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border: none !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
+    font-family: 'Courier New', Courier, monospace !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
+  /* HEADER */
   .slip-gaji-header {
-    border-bottom: 2px dashed #000 !important;
-    padding-bottom: 0.75rem !important;
-    margin-bottom: 0.75rem !important;
+    text-align: center !important;
+    border-bottom: 2px dashed #cbd5e1 !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1rem !important;
   }
 
   .slip-gaji-header h2 {
-    font-size: 1.4rem !important;
+    font-size: 1.2rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 2px !important;
+    color: #0f172a !important;
+    text-transform: uppercase !important;
   }
 
-  .slip-meta-grid {
-    margin-bottom: 1rem !important;
-    gap: 0.5rem !important;
-    font-size: 0.85rem !important;
-  }
-
-  .slip-item {
-    margin-bottom: 0.35rem !important;
-    font-size: 0.85rem !important;
-  }
-
-  .slip-total {
+  .slip-gaji-header h3 {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
     margin-top: 0.75rem !important;
+    letter-spacing: 1px !important;
+  }
+
+  .slip-gaji-header p {
+    color: #64748b !important;
+    font-size: 0.8rem !important;
+    margin: 0.2rem 0 !important;
+  }
+
+  /* META GRID */
+  .slip-meta-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.4rem !important;
+    font-size: 0.82rem !important;
+    margin-bottom: 1rem !important;
+    color: #334155 !important;
+  }
+
+  .slip-meta-grid div {
+    color: #334155 !important;
+    line-height: 1.6 !important;
+  }
+
+  /* RINCIAN KEHADIRAN BOX */
+  .slip-gaji-card > div[style*="border: 1px dashed"] {
+    border: 1px dashed #cbd5e1 !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+    color: #475569 !important;
+    padding: 0.4rem 0.6rem !important;
+    margin-bottom: 1rem !important;
+    background-color: #fff !important;
+  }
+
+  /* SECTION TITLES — warna primary indigo */
+  .slip-section-title {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding-bottom: 0.4rem !important;
+    margin-bottom: 0.6rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 0.82rem !important;
+    color: #6366f1 !important;
+  }
+
+  /* LINE ITEMS */
+  .slip-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 0.4rem !important;
+    font-size: 0.82rem !important;
+    color: #334155 !important;
+  }
+
+  .slip-item span {
+    color: #334155 !important;
+  }
+
+  /* PPh 21 — warna error rose */
+  .slip-item[style*="color: var(--error)"] {
+    color: #f43f5e !important;
+  }
+  .slip-item[style*="color: var(--error)"] span {
+    color: #f43f5e !important;
+  }
+
+  /* SUBTOTAL ROWS */
+  .slip-total {
+    display: flex !important;
+    justify-content: space-between !important;
+    border-top: 1px dashed #cbd5e1 !important;
     padding-top: 0.5rem !important;
-    font-size: 0.95rem !important;
+    font-weight: bold !important;
+    font-size: 0.9rem !important;
+    margin-top: 0.6rem !important;
+    color: #0f172a !important;
   }
 
+  /* GAJI BERSIH — warna success emerald */
+  .slip-gaji-card > div[style*="margin-top: 2rem"] {
+    margin-top: 1rem !important;
+    border-top: 2px solid #6366f1 !important;
+    padding-top: 0.75rem !important;
+    font-size: 1rem !important;
+    font-weight: bold !important;
+    color: #10b981 !important;
+  }
+  .slip-gaji-card > div[style*="margin-top: 2rem"] span {
+    color: #10b981 !important;
+  }
+
+  /* SIGNATURES */
   .slip-signatures {
-    margin-top: 2rem !important;
-    gap: 1.5rem !important;
-    color: #000 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-top: 1.5rem !important;
+    gap: 1rem !important;
+    color: #334155 !important;
   }
 
-  .signature-box {
-    margin-top: 2rem !important;
+  .slip-signatures p {
+    font-size: 0.82rem !important;
+    color: #334155 !important;
+    margin: 0 0 0.25rem !important;
+  }
+
+  .slip-signatures div[style*="height: 4rem"],
+  .slip-signatures div[style*="height:4rem"] {
+    height: 3rem !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
   .signature-line {
-    border-top: 1px solid #000 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
+    padding-top: 0.25rem !important;
+    min-width: 140px !important;
+    font-size: 0.8rem !important;
+    display: inline-block !important;
+    color: #334155 !important;
+    text-align: center !important;
   }
 
+  /* FOOTER */
   .slip-gaji-footer {
-    border-top: 2px dashed #000 !important;
-    margin-top: 1.5rem !important;
+    text-align: center !important;
+    border-top: 2px dashed #cbd5e1 !important;
     padding-top: 0.75rem !important;
-    font-size: 0.75rem !important;
-    color: #000 !important;
+    margin-top: 1rem !important;
+    font-size: 0.78rem !important;
+    color: #64748b !important;
   }
 
-  /* Hide all siblings of modal-overlay to print ONLY the modal content */
+  .slip-gaji-footer p {
+    color: #64748b !important;
+    margin: 0.2rem 0 !important;
+  }
+
+  /* HIDE MODAL BACKDROP SIBLINGS */
   *:has(> .modal-overlay) > *:not(.modal-overlay) {
     display: none !important;
   }
 
   @page {
-    size: portrait;
+    size: A4 portrait;
     margin: 0;
   }
 }
+
+
 
 /* Toast Animation */
 @keyframes slideIn {

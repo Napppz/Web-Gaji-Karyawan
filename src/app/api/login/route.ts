@@ -75,10 +75,11 @@ export async function POST(request: Request) {
       { error: 'Email tidak terdaftar' },
       { status: 401 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Unknown error';
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
+      { error: 'Internal Server Error', details: msg },
       { status: 500 }
     );
   }

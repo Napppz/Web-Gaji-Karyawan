@@ -66,12 +66,12 @@ function generateNoRek(): string {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('');
 }
 
-function generateKehadiran(bulan: number, tahun: number) {
+function generateKehadiran(bulan: number, tahun: number, jamLembur = 0) {
   const hariAlpha = Math.random() < 0.12 ? Math.floor(Math.random() * 3) : 0;
   const hariSakit = Math.random() < 0.20 ? Math.floor(Math.random() * 3) : 0;
   const hariCuti  = Math.random() < 0.18 ? Math.floor(Math.random() * 3) : 0;
   const hariHadir = Math.max(15, 22 - hariAlpha - hariSakit - hariCuti);
-  return { bulan, tahun, hariHadir, hariSakit, hariCuti, hariAlpha };
+  return { bulan, tahun, hariHadir, hariSakit, hariCuti, hariAlpha, jamLembur };
 }
 
 // Simple browser-compatible CSV text parser
@@ -182,9 +182,13 @@ export async function POST(request: Request) {
         password: DEFAULT_PASSWORD,
       });
 
+      // Baca jam lembur dari CSV jika tersedia (kolom: jam_lembur / lembur / overtime_hours)
+      const jamLemburRaw = row['jam_lembur'] || row['lembur'] || row['overtime_hours'] || row['jamLembur'] || '';
+      const jamLembur = parseInt(jamLemburRaw.replace(/[^0-9]/g, '')) || 0;
+
       kehadiranDataList.push({
         karyawanId,
-        ...generateKehadiran(bulan, tahun),
+        ...generateKehadiran(bulan, tahun, jamLembur),
       });
     });
 

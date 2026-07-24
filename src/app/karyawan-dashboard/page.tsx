@@ -4,9 +4,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Layers, CalendarDays, Wallet, User, CheckCircle2, Clock, Printer, X, Bell, Activity, AlertTriangle } from 'lucide-react';
+import { Layers, CalendarDays, CheckCircle2, Clock, X, Bell, Activity, AlertTriangle } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import Link from 'next/link';
 
 const BULAN_LIST = [
   { value: 1, label: 'Januari' },
@@ -142,13 +141,19 @@ export default function KaryawanDashboard() {
 
   useEffect(() => {
     if (employeeData) {
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear  = new Date().getFullYear();
+      const activeAttendance = employeeData?.kehadiran?.find(
+        (k: { bulan: number; tahun: number }) => k.bulan === currentMonth && k.tahun === currentYear
+      ) || { hariHadir: 0, hariSakit: 0, hariCuti: 0, hariAlpha: 0 };
+
       const key = `clockInLogs_${employeeData.id}`;
       const logsStr = localStorage.getItem(key);
       if (logsStr) {
         setClockInLogs(JSON.parse(logsStr));
       } else {
         const generatedLogs = [];
-        let datePointer = new Date();
+        const datePointer = new Date();
         let daysToGenerate = activeAttendance.hariHadir;
         const [limitHour] = jamMasukLimit.split(':').map(Number);
         
@@ -212,8 +217,6 @@ export default function KaryawanDashboard() {
     } catch (err) { console.error(err); alert('Terjadi kesalahan koneksi.'); }
   };
 
-  const formatIDR = (num: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear  = new Date().getFullYear();

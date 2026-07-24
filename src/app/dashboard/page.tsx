@@ -39,7 +39,12 @@ interface DashboardData {
   attendanceTahun: number;
 }
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899', '#8b5cf6'];
+const COLORS = [
+  '#6366f1', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899', '#8b5cf6',
+  '#f97316', '#14b8a6', '#e11d48', '#84cc16', '#06b6d4', '#a855f7',
+  '#eab308', '#3b82f6', '#d946ef', '#22c55e', '#fb923c', '#38bdf8',
+  '#c084fc', '#4ade80',
+];
 
 const BULAN_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -469,35 +474,76 @@ export default function Dashboard() {
 
           {/* Department distribution */}
           <div className="glass-card">
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 600 }}>Penyebaran Jabatan SDM</h3>
-            <div style={{ width: '100%', height: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              {data?.departmentDistribution && data.departmentDistribution.length > 0 ? (
-                <div style={{ display: 'flex', height: '100%' }}>
-                  <div style={{ flex: 1 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={data.departmentDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
-                          {data.departmentDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={{ background: '#0f172a', borderColor: 'var(--border-light)', borderRadius: '8px' }} formatter={(value) => [`${value} Karyawan`]} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    {data.departmentDistribution.map((entry, index) => (
-                      <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: COLORS[index % COLORS.length] }} />
-                        <span style={{ fontWeight: 500 }}>{entry.name} ({entry.value})</span>
-                      </div>
-                    ))}
-                  </div>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 600 }}>Penyebaran Jabatan SDM</h3>
+            {data?.departmentDistribution && data.departmentDistribution.length > 0 ? (
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                {/* Pie chart — lebar tetap agar tidak squish */}
+                <div style={{ flexShrink: 0, width: '200px', height: '200px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data.departmentDistribution}
+                        cx="50%" cy="50%"
+                        innerRadius={55} outerRadius={85}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {data.departmentDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: '#0f172a', borderColor: 'var(--border-light)', borderRadius: '8px', fontSize: '0.8rem' }}
+                        formatter={(value, name) => [`${value} Karyawan`, name]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ) : (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Belum ada pembagian jabatan.</div>
-              )}
-            </div>
+
+                {/* Legend dengan scroll jika banyak jabatan */}
+                <div style={{
+                  flex: 1,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.35rem',
+                  paddingRight: '4px',
+                }}>
+                  {data.departmentDistribution.map((entry, index) => (
+                    <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                      <div style={{
+                        flexShrink: 0,
+                        width: '10px', height: '10px',
+                        borderRadius: '2px',
+                        backgroundColor: COLORS[index % COLORS.length],
+                      }} />
+                      <span style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 500,
+                        color: 'var(--text-secondary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>
+                        {entry.name}
+                      </span>
+                      <span style={{
+                        flexShrink: 0,
+                        marginLeft: 'auto',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: COLORS[index % COLORS.length],
+                      }}>
+                        {entry.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Belum ada pembagian jabatan.</div>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +21,6 @@ const BULAN_LIST = [
 ];
 
 export default function KaryawanSlipPage() {
-  const [userSession, setUserSession] = useState<any>(null);
   const [employeeData, setEmployeeData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,7 +53,6 @@ export default function KaryawanSlipPage() {
     const sessionStr = localStorage.getItem('employeeSession');
     if (sessionStr) {
       const session = JSON.parse(sessionStr);
-      setUserSession(session);
       fetchEmployeeData(session.id);
     } else {
       setError('Sesi Anda tidak valid. Silakan login kembali.');

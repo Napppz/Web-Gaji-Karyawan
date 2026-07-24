@@ -609,7 +609,7 @@ export default function PenggajianPage() {
                   <div className="slip-meta-grid">
                     <div>
                       <div><strong>Nama Karyawan :</strong> {selectedSlip.karyawan.nama}</div>
-                      <div><strong>ID Karyawan   :</strong> {selectedSlip.karyawanId.substring(0, 8)}...</div>
+                      <div><strong>ID Karyawan   :</strong> {selectedSlip.karyawanId}</div>
                       <div><strong>Jabatan       :</strong> {selectedSlip.karyawan.jabatan}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

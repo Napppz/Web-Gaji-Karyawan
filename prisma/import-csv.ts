@@ -25,7 +25,11 @@ import 'dotenv/config';
 // ──────────────────────────────────────────────
 // PATH FILE CSV
 // ──────────────────────────────────────────────
-let CSV_FILE_PATH = path.join(__dirname, 'dataset_penggajian_100_karyawan_jurusan_kantor_dengan_lembur.csv');
+// Prioritaskan file dataset dengan ID karyawan
+let CSV_FILE_PATH = path.join(__dirname, 'dataset_penggajian_100_karyawan_dengan_id.csv');
+if (!fs.existsSync(CSV_FILE_PATH)) {
+  CSV_FILE_PATH = path.join(__dirname, 'dataset_penggajian_100_karyawan_jurusan_kantor_dengan_lembur.csv');
+}
 if (!fs.existsSync(CSV_FILE_PATH)) {
   CSV_FILE_PATH = path.join(__dirname, 'data', 'karyawan.csv');
 }
@@ -184,6 +188,9 @@ async function main() {
   // ── TRANSFORMASI DATA ──
   const emailSet = new Set<string>();
   const karyawanList = rows.map((row, index) => {
+    // Baca ID dari kolom 'ID Karyawan' (header dinormalisasi → 'id_karyawan')
+    const idKaryawan = (row['id_karyawan'] || '').trim() || `KRY-${String(index + 1).padStart(3, '0')}`;
+
     // Check if new CSV fields exist, otherwise fall back to old CSV format
     const nama = row['nama_karyawan'] || row['nama'] || `Karyawan ${index + 1}`;
     const email_raw = row['email'] || '';
@@ -210,6 +217,7 @@ async function main() {
     emailSet.add(email);
 
     return {
+      _id: idKaryawan,
       nama: nama.trim(),
       email,
       jabatan: jabatan.trim(),
@@ -284,9 +292,10 @@ async function main() {
     const kehadiranDataList: any[] = [];
 
     karyawanList.forEach((k) => {
-      // Destructure: remove temporary field before insert
-      const { _kehadiran, ...dataInsert } = k;
-      const karyawanId = randomUUID();
+      // Destructure: pisahkan field sementara sebelum insert
+      const { _kehadiran, _id, ...dataInsert } = k;
+      // Gunakan ID dari dataset CSV (misal KRY-001), fallback ke UUID jika kosong
+      const karyawanId = _id || randomUUID();
 
       karyawanDataList.push({
         id: karyawanId,

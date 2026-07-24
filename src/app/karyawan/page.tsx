@@ -153,7 +153,7 @@ export default function KaryawanPage() {
       return;
     }
 
-    const payload: any = {
+    const payload: Partial<Karyawan> & { gajiPokok: number; tunjanganJabatan: number } = {
       ...formData,
       gajiPokok: salaryVal,
       tunjanganJabatan: allowanceVal,

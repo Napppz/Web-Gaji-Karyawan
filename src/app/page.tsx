@@ -1,33 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Cpu, ShieldCheck, Zap, ArrowRight,
   MapPin, Mail, Phone, ExternalLink, Code2, Database,
-  Users, Award, TrendingUp, ChevronRight, Menu, X,
+  ChevronRight, Menu, X,
   Lock, Rocket, Star
 } from 'lucide-react';
 
 
 
-// --- Animated Counter Hook ---
-function useCounter(target: number, duration: number = 2000, start: boolean = false) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let startTime: number;
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return count;
-}
 
 // --- Particle Background ---
 function ParticleBackground() {
@@ -65,41 +48,15 @@ function ParticleBackground() {
 }
 
 
-// --- Stat Card ---
-function StatCard({ value, suffix, label, color, icon: Icon, animStart }: {
-  value: number, suffix: string, label: string, color: string, icon: React.ElementType, animStart: boolean
-}) {
-  const count = useCounter(value, 2000, animStart);
-  return (
-    <div className="stat-item">
-      <div className="stat-icon" style={{ background: `${color}18`, color }}>
-        <Icon size={20} />
-      </div>
-      <div className="stat-num" style={{ color }}>{count}{suffix}</div>
-      <div className="stat-label-text">{label}</div>
-    </div>
-  );
-}
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [statsVisible, setStatsVisible] = useState(false);
-  const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (statsRef.current) observer.observe(statsRef.current);
-    return () => observer.disconnect();
   }, []);
 
   const services = [
@@ -213,10 +170,10 @@ export default function LandingPage() {
           </div>
           <div className="hcard-code">
             <span className="c-kw">const</span> <span className="c-var">nappz</span> = {'{'}
-            <br />{'  '}<span className="c-key">name</span>: <span className="c-str">"PT Nappz Teknologi Nusantara"</span>,
-            <br />{'  '}<span className="c-key">mission</span>: <span className="c-str">"Akselerasi Transformasi Digital"</span>,
-            <br />{'  '}<span className="c-key">solutions</span>: [<span className="c-str">"HRIS"</span>, <span className="c-str">"Cloud"</span>, <span className="c-str">"Security"</span>],
-            <br />{'  '}<span className="c-key">status</span>: <span className="c-bool">true</span> <span className="c-comment">// Siap melayani</span>
+            <br />{'  '}<span className="c-key">name</span>: <span className="c-str">&quot;PT Nappz Teknologi Nusantara&quot;</span>,
+            <br />{'  '}<span className="c-key">mission</span>: <span className="c-str">&quot;Akselerasi Transformasi Digital&quot;</span>,
+            <br />{'  '}<span className="c-key">solutions</span>: [<span className="c-str">&quot;HRIS&quot;</span>, <span className="c-str">&quot;Cloud&quot;</span>, <span className="c-str">&quot;Security&quot;</span>],
+            <br />{'  '}<span className="c-key">status</span>: <span className="c-bool">true</span> <span className="c-comment">{/* Siap melayani */}</span>
             <br />{'}'}
           </div>
           <div className="hcard-footer">
@@ -226,15 +183,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── STATS ── */}
-      <section className="stats-section" ref={statsRef}>
-        <div className="stats-grid">
-          <StatCard value={50} suffix="+" label="Proyek IT Sukses" color="#6366f1" icon={Award} animStart={statsVisible} />
-          <StatCard value={25} suffix="+" label="Mitra Korporat Aktif" color="#10b981" icon={Users} animStart={statsVisible} />
-          <StatCard value={15} suffix="+" label="Ahli Software Engineer" color="#0ea5e9" icon={Code2} animStart={statsVisible} />
-          <StatCard value={99} suffix="%" label="Uptime SLA Garansi" color="#f59e0b" icon={TrendingUp} animStart={statsVisible} />
-        </div>
-      </section>
 
       {/* ── TENTANG ── */}
       <section id="tentang" className="about-section">
@@ -245,12 +193,12 @@ export default function LandingPage() {
             <span className="section-tag">Tentang Kami</span>
             <h2 className="section-title">PT Nappz Teknologi<br />Nusantara</h2>
             <p className="section-desc">
-              Didirikan sebagai entitas <strong>software house dan konsultan IT terintegrasi</strong>, 
-              PT Nappz Teknologi Nusantara berkomitmen menghadirkan ekosistem digital yang andal 
+              Didirikan sebagai entitas <strong>software house dan konsultan IT terintegrasi</strong>,
+              PT Nappz Teknologi Nusantara berkomitmen menghadirkan ekosistem digital yang andal
               bagi korporasi dan institusi di seluruh Indonesia.
             </p>
             <p className="section-desc">
-              Fokus kami mencakup rekayasa aplikasi web/mobile tingkat lanjut, optimasi infrastruktur 
+              Fokus kami mencakup rekayasa aplikasi web/mobile tingkat lanjut, optimasi infrastruktur
               cloud serverless, serta penyederhanaan birokrasi operasional melalui software HRIS/Payroll yang aman.
             </p>
             <div className="about-pills">
@@ -267,8 +215,8 @@ export default function LandingPage() {
               <div>
                 <div className="visi-label">Visi Perusahaan</div>
                 <p className="visi-text">
-                  "Menjadi pionir akselerator solusi IT terpadu di Indonesia yang dikenal karena 
-                  kode berkualitas dunia, integritas arsitektur data, dan komitmen pelayanan prima."
+                  &quot;Menjadi pionir akselerator solusi IT terpadu di Indonesia yang dikenal karena
+                  kode berkualitas dunia, integritas arsitektur data, dan komitmen pelayanan prima.&quot;
                 </p>
               </div>
             </div>
@@ -392,7 +340,6 @@ export default function LandingPage() {
         </div>
         <div className="footer-bottom">
           <span>© 2026 PT Nappz Teknologi Nusantara. Seluruh Hak Cipta Dilindungi.</span>
-          <span style={{ color: 'var(--text-muted)' }}>Made with ❤️ in Indonesia</span>
         </div>
       </footer>
 
