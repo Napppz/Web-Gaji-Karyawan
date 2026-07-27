@@ -16,17 +16,14 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-// In development, store on global to survive HMR reloads.
-// But always re-create if the global instance doesn't have the expected model (e.g. after schema change).
+// Re-create PrismaClient instance to ensure any new schema fields (e.g. jamLembur) are reloaded.
 if (process.env.NODE_ENV !== 'production') {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrismaClient();
-  }
+  globalForPrisma.prisma = createPrismaClient();
 }
 
 const prisma: PrismaClient =
   process.env.NODE_ENV === 'production'
     ? createPrismaClient()
-    : (globalForPrisma.prisma as PrismaClient);
+    : globalForPrisma.prisma;
 
 export { prisma };

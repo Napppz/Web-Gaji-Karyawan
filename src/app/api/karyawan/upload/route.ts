@@ -143,56 +143,6 @@ export async function POST(request: Request) {
     const bulan = currentDate.getMonth() + 1;
     const tahun = currentDate.getFullYear();
 
-    const emailSet = new Set<string>();
-    
-    // Siapkan list karyawan dan kehadiran dengan pre-generated ID
-    const karyawanDataList: any[] = [];
-    const kehadiranDataList: any[] = [];
-
-    rows.forEach((row, index) => {
-      const nama = row['nama'] || row['nama_karyawan'] || row['name'] || `Karyawan ${index + 1}`;
-      const jabatan = row['jabatan'] || row['posisi'] || row['position'] || row['divisi'] || 'Staff';
-      const gaji = parseGaji(row['gaji'] || row['gaji_pokok'] || row['salary'] || '');
-      const email_raw = row['email'] || row['email_karyawan'] || '';
-      const departemen = row['departemen'] || '';
-
-      const tunjanganJabatan = hitungTunjangan(gaji, jabatan);
-      const namaBank = tentukanBank(departemen);
-      const statusKerja = tentukanStatus(jabatan);
-
-      let email = email_raw || `karyawan${index + 1}@nappz.co.id`;
-      if (emailSet.has(email)) {
-        email = email.replace('@', `.${index}@`);
-      }
-      emailSet.add(email);
-
-      // Pre-generate UUID
-      const karyawanId = randomUUID();
-
-      karyawanDataList.push({
-        id: karyawanId,
-        nama: nama.trim(),
-        email,
-        jabatan: jabatan.trim(),
-        statusKerja,
-        gajiPokok: gaji,
-        tunjanganJabatan,
-        namaBank,
-        nomorRekening: generateNoRek(),
-        password: DEFAULT_PASSWORD,
-      });
-
-      // Baca jam lembur dari CSV jika tersedia (kolom: jam_lembur / lembur / overtime_hours)
-      const jamLemburRaw = row['jam_lembur'] || row['lembur'] || row['overtime_hours'] || row['jamLembur'] || '';
-      const jamLembur = parseInt(jamLemburRaw.replace(/[^0-9]/g, '')) || 0;
-
-      kehadiranDataList.push({
-        karyawanId,
-        ...generateKehadiran(bulan, tahun, jamLembur),
-      });
-    });
-
-    // Clear existing tables data optionally
     const clearOption = formData.get('clearExisting') === 'true';
     if (clearOption) {
       await prisma.penggajian.deleteMany({});
@@ -200,29 +150,149 @@ export async function POST(request: Request) {
       await prisma.karyawan.deleteMany({});
     }
 
-    // Eksekusi Bulk Insert (Hanya 2 query!)
-    await prisma.karyawan.createMany({
-      data: karyawanDataList,
+    // Ambil daftar karyawan eksis untuk matching berdasarkan email jika clearExisting false
+    const existingKaryawanList = clearOption
+      ? []
+      : await prisma.karyawan.findMany({ select: { id: true, email: true } });
+
+    const existingMap = new Map<string, string>(
+      existingKaryawanList.map((k) => [k.email.toLowerCase(), k.id])
+    );
+
+    const emailSet = new Set<string>();
+    const toCreateKaryawan: any[] = [];
+    const toUpdateKaryawan: { id: string; data: any }[] = [];
+    const toInsertKehadiran: any[] = [];
+    const affectedKaryawanIds: string[] = [];
+
+    rows.forEach((row, index) => {
+      const nama = row['nama_karyawan'] || row['nama'] || row['name'] || `Karyawan ${index + 1}`;
+      const email_raw = row['email'] || row['email_karyawan'] || '';
+      const jabatan = row['jabatan'] || row['posisi'] || row['position'] || row['divisi'] || 'Staff';
+
+      const statusKerjaRaw = (row['status_kerja'] || row['status'] || '').toUpperCase();
+      const statusKerja = (statusKerjaRaw === 'KONTRAK' || statusKerjaRaw === 'TETAP')
+        ? (statusKerjaRaw as 'TETAP' | 'KONTRAK')
+        : tentukanStatus(jabatan);
+
+      const gajiPokok = parseGaji(row['gaji_pokok'] || row['gaji'] || row['salary'] || '');
+      const tunjanganRaw = row['tunjangan_jabatan'] || row['tunjangan'] || '';
+      const tunjanganJabatan = tunjanganRaw ? parseGaji(tunjanganRaw) : hitungTunjangan(gajiPokok, jabatan);
+      const namaBank = row['bank'] || row['nama_bank'] || tentukanBank(row['departemen'] || '');
+      const nomorRekening = row['no_rekening'] || row['nomor_rekening'] || row['rekening'] || generateNoRek();
+
+      // Penanganan duplikat email dalam satu file CSV
+      let email = email_raw.toLowerCase().trim() || `karyawan${index + 1}@nappz.co.id`;
+      if (emailSet.has(email)) {
+        email = email.replace('@', `.${index}@`);
+      }
+      emailSet.add(email);
+
+      // Pembacaan data Kehadiran / Absensi dari CSV jika ada
+      const hasHariHadir = row['hari_hadir'] !== undefined && row['hari_hadir'] !== '';
+      const hariHadir = hasHariHadir ? parseInt(row['hari_hadir'].replace(/[^0-9]/g, '')) || 0 : 0;
+      const hariSakit = row['hari_sakit'] !== undefined && row['hari_sakit'] !== '' ? parseInt(row['hari_sakit'].replace(/[^0-9]/g, '')) || 0 : 0;
+      const hariCuti = row['hari_cuti'] !== undefined && row['hari_cuti'] !== '' ? parseInt(row['hari_cuti'].replace(/[^0-9]/g, '')) || 0 : 0;
+      const hariAlpha = row['hari_alpha'] !== undefined && row['hari_alpha'] !== '' ? parseInt(row['hari_alpha'].replace(/[^0-9]/g, '')) || 0 : 0;
+
+      const jamLemburRaw = row['jam_lembur'] || row['lembur'] || row['overtime_hours'] || row['jamLembur'] || '';
+      const jamLembur = parseInt(jamLemburRaw.replace(/[^0-9]/g, '')) || 0;
+
+      const kehData = hasHariHadir
+        ? { bulan, tahun, hariHadir, hariSakit, hariCuti, hariAlpha, jamLembur }
+        : generateKehadiran(bulan, tahun, jamLembur);
+
+      const existingId = existingMap.get(email);
+
+      if (existingId) {
+        // Karyawan sudah ada: update data karyawan
+        toUpdateKaryawan.push({
+          id: existingId,
+          data: {
+            nama: nama.trim(),
+            jabatan: jabatan.trim(),
+            statusKerja,
+            gajiPokok,
+            tunjanganJabatan,
+            namaBank,
+            nomorRekening,
+          },
+        });
+        affectedKaryawanIds.push(existingId);
+        toInsertKehadiran.push({ karyawanId: existingId, ...kehData });
+      } else {
+        // Karyawan baru: buat ID baru atau pakai ID Karyawan dari CSV jika ada
+        const customId = (row['id_karyawan'] || row['id'] || '').trim();
+        const karyawanId = customId ? customId : randomUUID();
+
+        toCreateKaryawan.push({
+          id: karyawanId,
+          nama: nama.trim(),
+          email,
+          jabatan: jabatan.trim(),
+          statusKerja,
+          gajiPokok,
+          tunjanganJabatan,
+          namaBank,
+          nomorRekening,
+          password: DEFAULT_PASSWORD,
+        });
+        affectedKaryawanIds.push(karyawanId);
+        toInsertKehadiran.push({ karyawanId, ...kehData });
+      }
     });
 
-    await prisma.kehadiran.createMany({
-      data: kehadiranDataList,
-    });
+    // 1. Bulk Insert Karyawan Baru
+    if (toCreateKaryawan.length > 0) {
+      await prisma.karyawan.createMany({
+        data: toCreateKaryawan,
+        skipDuplicates: true,
+      });
+    }
+
+    // 2. Update Data Karyawan Eksis (jika ada)
+    for (const item of toUpdateKaryawan) {
+      await prisma.karyawan.update({
+        where: { id: item.id },
+        data: item.data,
+      });
+    }
+
+    // 3. Perbarui Kehadiran Karyawan untuk Bulan & Tahun Ini
+    if (affectedKaryawanIds.length > 0) {
+      await prisma.kehadiran.deleteMany({
+        where: {
+          bulan,
+          tahun,
+          karyawanId: { in: affectedKaryawanIds },
+        },
+      });
+
+      await prisma.kehadiran.createMany({
+        data: toInsertKehadiran,
+        skipDuplicates: true,
+      });
+    }
+
+    const totalProcessed = toCreateKaryawan.length + toUpdateKaryawan.length;
 
     return NextResponse.json({
-      message: `Berhasil mengimport data karyawan secara kilat.`,
+      message: `Berhasil meng-import dataset (${toCreateKaryawan.length} baru, ${toUpdateKaryawan.length} diperbarui).`,
       summary: {
         totalCsvRows: rows.length,
-        berhasil: karyawanDataList.length,
+        berhasil: totalProcessed,
+        dibuat: toCreateKaryawan.length,
+        diperbarui: toUpdateKaryawan.length,
         gagal: 0,
         bulan,
-        tahun
-      }
+        tahun,
+      },
     });
 
   } catch (error: any) {
     console.error('Gagal memproses file upload:', error);
-    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal memproses dataset: ' + (error.message || 'Internal Server Error') }, { status: 500 });
   }
 }
+
 
