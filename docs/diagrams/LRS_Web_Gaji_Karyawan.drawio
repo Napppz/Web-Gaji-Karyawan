@@ -6,7 +6,7 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="title" value="LRS (Logical Record Structure) - Web Gaji Karyawan" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontColor=#1e3a5f;" vertex="1" parent="1"><mxGeometry x="300" y="20" width="700" height="40" as="geometry" /></mxCell>
-        <mxCell id="note" value="Keterangan: LRS menampilkan struktur tabel lengkap dengan semua atribut, tipe data, PK, FK, dan relasi antar tabel" style="text;html=1;strokeColor=#d1d5db;fillColor=#fef3c7;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontColor=#92400e;" vertex="1" parent="1"><mxGeometry x="250" y="65" width="800" height="30" as="geometry" /></mxCell>
+        <mxCell id="note" value="Keterangan: LRS menampilkan struktur tabel lengkap dengan semua atribut, tipe data, PK, FK, dan relasi logis antar tabel" style="text;html=1;strokeColor=#d1d5db;fillColor=#fef3c7;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontColor=#92400e;" vertex="1" parent="1"><mxGeometry x="250" y="65" width="800" height="30" as="geometry" /></mxCell>
 
         <!-- KARYAWAN -->
         <mxCell id="k0" value="KARYAWAN" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#1d4ed8;fontColor=#ffffff;strokeColor=#1e40af;fontSize=13;" vertex="1" parent="1"><mxGeometry x="480" y="120" width="270" height="390" as="geometry" /></mxCell>
@@ -199,13 +199,19 @@
         <mxCell id="a6a" value="    diubahPada" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;overflow=hidden;" vertex="1" parent="a6"><mxGeometry width="135" height="30" as="geometry" /></mxCell>
         <mxCell id="a6b" value="DateTime" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;overflow=hidden;fontColor=#6b7280;" vertex="1" parent="a6"><mxGeometry x="135" width="135" height="30" as="geometry" /></mxCell>
 
-        <!-- FK RELATIONS -->
+        <!-- FK & LOGICAL RELATIONS -->
         <mxCell id="rel1" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#15803d;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="k1" target="h2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="rel2" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#c2410c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="k2" target="p2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="rel3" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6d28d9;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="k3" target="i2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
 
+        <!-- ADMIN RELATIONS -->
+        <mxCell id="rel_a_k" value="1 : N (Mengelola)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="a1" target="k1" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel_a_pg" value="1 : N (Mengatur)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="a1" target="pg1" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel_a_p" value="1 : N (Memproses)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="a1" target="p2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel_a_i" value="1 : N (Menyetujui)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;fontStyle=1;fontSize=11;" edge="1" source="a1" target="i2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
         <!-- LEGEND -->
-        <mxCell id="legend" value="LEGENDA: PK = Primary Key | FK = Foreign Key | UK = Unique Key | ? = Nullable | 1:N = Kardinalitas" style="text;html=1;strokeColor=#9ca3af;fillColor=#f9fafb;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;" vertex="1" parent="1"><mxGeometry x="90" y="400" width="270" height="50" as="geometry" /></mxCell>
+        <mxCell id="legend" value="LEGENDA: PK = Primary Key | FK = Foreign Key | UK = Unique Key | ? = Nullable | 1:N = Kardinalitas Relasi" style="text;html=1;strokeColor=#9ca3af;fillColor=#f9fafb;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;" vertex="1" parent="1"><mxGeometry x="90" y="400" width="270" height="50" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>

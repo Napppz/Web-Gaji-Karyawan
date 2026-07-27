@@ -24,6 +24,6 @@ if (process.env.NODE_ENV !== 'production') {
 const prisma: PrismaClient =
   process.env.NODE_ENV === 'production'
     ? createPrismaClient()
-    : globalForPrisma.prisma;
+    : (globalForPrisma.prisma ??= createPrismaClient());
 
 export { prisma };

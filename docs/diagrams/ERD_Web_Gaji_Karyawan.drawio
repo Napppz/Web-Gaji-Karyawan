@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram id="erd-diagram" name="ERD - Web Gaji Karyawan">
     <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
@@ -87,6 +87,12 @@
         <mxCell id="rel_mp" value="&lt;b&gt;memiliki&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fed7aa;strokeColor=#c2410c;fontSize=11;" vertex="1" parent="1"><mxGeometry x="820" y="400" width="140" height="80" as="geometry" /></mxCell>
         <mxCell id="rel_mi" value="&lt;b&gt;mengajukan&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ddd6fe;strokeColor=#6d28d9;fontSize=11;" vertex="1" parent="1"><mxGeometry x="820" y="640" width="140" height="80" as="geometry" /></mxCell>
 
+        <!-- ADMIN RELATIONSHIP DIAMONDS -->
+        <mxCell id="rel_ak" value="&lt;b&gt;mengelola&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fecaca;strokeColor=#b91c1c;fontColor=#7f1d1d;fontSize=11;" vertex="1" parent="1"><mxGeometry x="340" y="450" width="130" height="70" as="geometry" /></mxCell>
+        <mxCell id="rel_apg" value="&lt;b&gt;mengatur&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fecaca;strokeColor=#b91c1c;fontColor=#7f1d1d;fontSize=11;" vertex="1" parent="1"><mxGeometry x="125" y="365" width="130" height="70" as="geometry" /></mxCell>
+        <mxCell id="rel_aiz" value="&lt;b&gt;menyetujui&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fecaca;strokeColor=#b91c1c;fontColor=#7f1d1d;fontSize=11;" vertex="1" parent="1"><mxGeometry x="540" y="640" width="130" height="70" as="geometry" /></mxCell>
+        <mxCell id="rel_apgaj" value="&lt;b&gt;memproses&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fecaca;strokeColor=#b91c1c;fontColor=#7f1d1d;fontSize=11;" vertex="1" parent="1"><mxGeometry x="540" y="520" width="130" height="70" as="geometry" /></mxCell>
+
         <!-- RELATIONSHIP LINES with cardinality -->
         <mxCell id="rk1" value="1" style="edgeStyle=none;html=1;strokeColor=#1d4ed8;strokeWidth=2;startArrow=none;endArrow=none;fontStyle=1;fontSize=13;" edge="1" source="e_karyawan" target="rel_mk" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="rk2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#1d4ed8;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_mk" target="e_kehadiran" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
@@ -94,6 +100,19 @@
         <mxCell id="rp2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#c2410c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_mp" target="e_penggajian" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="ri1" value="1" style="edgeStyle=none;html=1;strokeColor=#6d28d9;strokeWidth=2;startArrow=none;endArrow=none;fontStyle=1;fontSize=13;" edge="1" source="e_karyawan" target="rel_mi" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="ri2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#6d28d9;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_mi" target="e_izin" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ADMIN RELATIONSHIP LINES -->
+        <mxCell id="rak1" value="1" style="edgeStyle=none;html=1;strokeColor=#b91c1c;strokeWidth=2;startArrow=none;endArrow=none;fontStyle=1;fontSize=13;" edge="1" source="e_admin" target="rel_ak" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rak2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_ak" target="e_karyawan" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="rapg1" value="1" style="edgeStyle=none;html=1;strokeColor=#b91c1c;strokeWidth=2;startArrow=none;endArrow=none;fontStyle=1;fontSize=13;" edge="1" source="e_admin" target="rel_apg" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rapg2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_apg" target="e_pengaturan" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="raiz1" value="1" style="edgeStyle=none;html=1;strokeColor=#b91c1c;strokeWidth=2;startArrow=none;endArrow=none;fontStyle=1;fontSize=13;" edge="1" source="e_admin" target="rel_aiz" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="raiz2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_aiz" target="e_izin" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="rapgaj1" value="1" style="edgeStyle=none;html=1;strokeColor=#b91c1c;strokeWidth=2;startArrow=none;endArrow=none;fontStyle=1;fontSize=13;" edge="1" source="e_admin" target="rel_apgaj" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rapgaj2" value="N" style="edgeStyle=entityRelationEdgeStyle;html=1;strokeColor=#b91c1c;strokeWidth=2;endArrow=ERzeroToMany;startArrow=ERmandOne;fontStyle=1;fontSize=13;" edge="1" source="rel_apgaj" target="e_penggajian" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
 
         <!-- LEGEND -->
         <mxCell id="legend" value="&lt;b&gt;LEGENDA:&lt;/b&gt;&lt;br&gt;Persegi panjang = Entitas&lt;br&gt;Oval = Atribut&lt;br&gt;Belah ketupat = Relasi&lt;br&gt;&lt;u&gt;Garis bawah&lt;/u&gt; = Primary/Unique Key&lt;br&gt;1 : N = Kardinalitas" style="text;html=1;strokeColor=#9ca3af;fillColor=#f9fafb;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="50" y="730" width="200" height="110" as="geometry" /></mxCell>
