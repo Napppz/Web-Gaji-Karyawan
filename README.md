@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💼 Web Gaji Karyawan (GajiKita)
+> **Sistem Informasi Penggajian Karyawan & Kalkulasi PPh 21 Progresif**
+> *Diperuntukkan untuk Sertifikasi Kompetensi Analis Program (BNSP)*
 
-## Getting Started
+Aplikasi berbasis web untuk otomasi perhitungan penggajian karyawan, integrasi potongan absensi, BPJS Kesehatan/Ketenagakerjaan, serta Pajak PPh 21 Progresif (UU HPP No. 7/2021).
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📁 Struktur Folder Proyek
+
+```text
+Web-Gaji-Karyawan/
+├── docs/                        # Dokumentasi Lengkap & Diagram Proyek
+│   ├── DOKUMENTASI.md           # Panduan Teknis & Pengujian Aplikasi
+│   ├── LATAR_BELAKANG_PPT_SERKOM.md # Bahan Presentasi & Latar Belakang Sertifikasi
+│   ├── PERHITUNGAN_GAJI_DAN_PAJAK.md # Penjelasan Rumus PPh 21 & BPJS untuk Asesor
+│   └── diagrams/                # File Diagram Draw.io
+│       ├── ERD_Web_Gaji_Karyawan.drawio  # Entity Relationship Diagram
+│       ├── LRS_Web_Gaji_Karyawan.drawio  # Logical Record Structure
+│       └── ERD_LRS_Web_Gaji_Karyawan.drawio # Gabungan ERD & LRS
+├── prisma/                      # Skema Database PostgreSQL & Migration
+│   └── schema.prisma
+├── public/                      # Asset Statis (Gambar, Favicon, dll)
+├── src/                         # Source Code Aplikasi (Next.js App Router)
+│   ├── app/                     # Routing, Pages, & API Routes
+│   │   ├── api/                 # Endpoint REST API (Penggajian, Kehadiran, Auth)
+│   │   ├── admin-dashboard/     # Portal Admin / HR
+│   │   └── karyawan-dashboard/  # Portal Self-Service Karyawan
+│   ├── components/              # Komponen UI Reusable
+│   ├── lib/                     # Client Database (Prisma Instance)
+│   └── utils/                   # Logika Bisnis (salaryCalculator.ts & Tests)
+├── .env                         # Konfigurasi Environment Variables
+├── package.json                 # Dependencies Proyek
+└── tsconfig.json                # Konfigurasi TypeScript
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📚 Dokumen Penting Proyek
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 📄 **[Latar Belakang & Presentasi PPT](file:///c:/Users/PC/Documents/Projekl/Web-Gaji-Karyawan/docs/LATAR_BELAKANG_PPT_SERKOM.md)**
+- 📄 **[Dokumentasi Perhitungan Gaji & Pajak PPh 21](file:///c:/Users/PC/Documents/Projekl/Web-Gaji-Karyawan/docs/PERHITUNGAN_GAJI_DAN_PAJAK.md)**
+- 📄 **[Dokumentasi Teknis Aplikasi](file:///c:/Users/PC/Documents/Projekl/Web-Gaji-Karyawan/docs/DOKUMENTASI.md)**
+- 📐 **Diagram ERD & LRS**: Ditemukan pada folder [`docs/diagrams/`](file:///c:/Users/PC/Documents/Projekl/Web-Gaji-Karyawan/docs/diagrams)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Cara Menjalankan Aplikasi
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Jalankan Server Development**:
+   ```bash
+   npm run dev
+   ```
+   Buka [http://localhost:3000](http://localhost:3000) pada browser Anda.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Menjalankan Pengujian Otomatis (Unit Test)**:
+   ```bash
+   npx vitest run
+   ```
